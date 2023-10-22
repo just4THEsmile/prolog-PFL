@@ -1,6 +1,7 @@
 :- dynamic gamemode/1.
 :- dynamic difficulty/1.
 
+
 drawMenuPlayer:-
     clear,
     write('                           Hello and Welcome to DuAlma Game.\n\n\n'),

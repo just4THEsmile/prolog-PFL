@@ -9,6 +9,10 @@ play:-
     drawMenuPlayer, %The drawMenuPlayer/0 draws the menu of the game
     retract(gamemode(Gamemode)),
     (Gamemode =:= 1 -> true ; retract(difficulty(Difficulty))),
+    get_name(player1),
+    get_name(player2),
+    write(player1),
+    write(player2),
     true.
 
     
