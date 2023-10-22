@@ -7,7 +7,8 @@
 %The play/0 starts the Game
 play:-
     drawMenuPlayer, %The drawMenuPlayer/0 draws the menu of the game
-    gamemode(Gamemode), write(Gamemode), nl, 
+    retract(gamemode(Gamemode)),
+    (Gamemode =:= 1 -> true ; retract(difficulty(Difficulty))),
     true.
 
     
