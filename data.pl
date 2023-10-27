@@ -1,0 +1,1 @@
+:- dynamic name_of_the_player/2.
