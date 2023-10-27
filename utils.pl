@@ -33,4 +33,6 @@ getGamemode(Gamemode):-
 getBotDifficulty(Bot):-
     repeat,
     read(BotDifficulty),
-    between(1,2,BotDifficulty).
+    between(1,2,BotDifficulty),
+    asserta(bot_difficulty(Bot, BotDifficulty)),
+    clear_input.
