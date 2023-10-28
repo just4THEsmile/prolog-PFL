@@ -36,3 +36,9 @@ getBotDifficulty(Bot):-
     between(1,2,BotDifficulty),
     asserta(bot_difficulty(Bot, BotDifficulty)),
     clear_input.
+
+getStartPlayer(StartPlayer):-
+    repeat,
+    read(StartPlayer),
+    between(1,2,StartPlayer),
+    clear_input.

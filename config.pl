@@ -4,7 +4,9 @@ configurations([Board,Player,0]):-
     drawStartMenu,
     getGamemode(Gamemode),
     !,
-    option(Gamemode).
+    option(Gamemode),
+    startPlayer(Player),
+    init_state(Board).
 
 drawStartMenu:-
     clear,
@@ -55,3 +57,8 @@ welcomePlayer(Player):-
     name_of_the_player(Player, Name),
     format('\nWelcome to the game, ~a!', [Name]), nl.
 
+startPlayer(Player):-
+    name_of_the_player(player1, Name1),
+    name_of_the_player(player2, Name2),
+    format('\nWho will start the game?Select 1 for ~a or select 2 for ~a?', [Name1,Name2]), nl,
+    getStartPlayer(Player).
