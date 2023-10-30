@@ -6,9 +6,9 @@
 */
 game_cycle_first_phase(Gamestate):-
     display_board(Gamestate),
+    print_stats(Gamestate),
     true.
-/*   print_stats(Gamestate),
-    put_piece_input(Gamestate, Put),
+/*    put_piece_input(Gamestate, Put),
     put_piece_move( Gamestate, Put, NewGamestate),
     !,
     true.

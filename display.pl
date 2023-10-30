@@ -54,5 +54,7 @@ write_hexagon_tile(blackblack):-
 
 
 print_stats([_,Player,_]):-
-    name_of_the_player( Player, Name ),
-    format('Its Player ~a turn. Good luck!', [Name]).
+    write(Player),
+    name_of_the_player(Player,Name),
+    format('Its Player ~a turn. Good luck!', [Name]),
+    true.
