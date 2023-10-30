@@ -7,8 +7,8 @@ display_board([Board,_,_]):-
     print_board(Board).
     
 
-init_state(Board):-
-    board(Board).
+init_state(Size,Board):-
+    board(Size,Board).
 
 print_board(Board):-
     length(Board, NumRows),

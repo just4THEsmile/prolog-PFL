@@ -2,8 +2,8 @@
 :- dynamic difficulty/2.
 
 
-board([
-         [empty, white, empty, empty, empty],
+board(8,[
+         [empty, empty, empty, empty, empty],
       [empty, empty, empty, empty, empty, empty],
      [empty, empty, empty, empty, empty, empty, empty],
    [empty, empty, empty, empty, empty, empty, empty, empty],
@@ -12,4 +12,34 @@ board([
      [empty, empty, empty, empty, empty, empty, empty],
       [empty, empty, empty, empty, empty, empty],
          [empty, empty, empty, empty, empty]
+]).
+
+board(10,[
+         [empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty, empty],
+  [empty, empty, empty, empty, empty, empty, empty],
+ [empty, empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty],
+ [empty, empty, empty, empty, empty, empty, empty, empty],     
+  [empty, empty, empty, empty, empty, empty, empty],
+   [empty, empty, empty, empty, empty, empty],
+      [empty, empty, empty, empty, empty]
+]).
+
+board(12,[
+   [empty, empty, empty, empty, empty],
+   [empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty,empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
+[empty, empty, empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty, empty],     
+[empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty],
+   [empty, empty, empty, empty, empty]   
 ]).

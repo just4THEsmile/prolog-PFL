@@ -6,7 +6,8 @@ configurations([Board,Player,0]):-
     !,
     option(Gamemode),
     startPlayer(Player),
-    init_state(Board).
+    getBoardSize(Size),
+    init_state(Size,Board).
 
 drawStartMenu:-
     clear,
@@ -62,3 +63,6 @@ startPlayer(Player):-
     name_of_the_player(player2, Name2),
     format('\nWho will start the game?Select 1 for ~a or select 2 for ~a?', [Name1,Name2]), nl,
     getStartPlayer(Player).
+
+
+    
