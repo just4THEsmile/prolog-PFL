@@ -12,22 +12,23 @@ init_state(Board):-
 
 print_board(Board):-
     length(Board, NumRows),
-    print_board_rows(Board, NumRows).
+    print_board_rows(Board, 1, NumRows).
 
-print_board_rows(_, 0).
-print_board_rows(Board, NumRows):-
+print_board_rows(_, NumRows, NumRows):- !.
+print_board_rows(Board, NumRows, MaxRows):-
     length(Board, BoardLength),
     NumSpaces is abs(NumRows - (BoardLength + 1) // 2),
-    print_spaces(NumSpaces),
+    NumSpaces1 is NumSpaces + 55,
+    print_spaces(NumSpaces1),
     nth1(NumRows, Board, Row),
     write_row(Row),
     nl,
-    NextNumRows is NumRows - 1,
-    print_board_rows(Board, NextNumRows).
+    NextNumRows is NumRows + 1,
+    print_board_rows(Board, NextNumRows, MaxRows).
 
 print_spaces(0).
 print_spaces(N):-
-    write(' '),
+    write(' '), 
     NextN is N - 1,
     print_spaces(NextN).
 
@@ -38,8 +39,16 @@ write_row([H|T]):-
     write_row(T).
 
 write_hexagon_tile(empty):-
-    write('O').
+    put_code(9711).
 write_hexagon_tile(white):-
-    write('X').
+    write('w').
 write_hexagon_tile(black):-
-    write('*').
+    write('b').
+write_hexagon_tile(whiteblack):-
+    write('g').
+write_hexagon_tile(blackwhite):-
+    write('G').
+write_hexagon_tile(whitewhite):-
+    write('W').
+write_hexagon_tile(blackblack):-
+    write('B').

@@ -3,7 +3,7 @@
 
 
 board([
-         [empty, empty, empty, empty, empty],
+         [empty, white, empty, empty, empty],
       [empty, empty, empty, empty, empty, empty],
      [empty, empty, empty, empty, empty, empty, empty],
    [empty, empty, empty, empty, empty, empty, empty, empty],
