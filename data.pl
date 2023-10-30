@@ -13,33 +13,3 @@ board(8,[
       [empty, empty, empty, empty, empty, empty],
          [empty, empty, empty, empty, empty]
 ]).
-
-board(10,[
-         [empty, empty, empty, empty, empty],
-      [empty, empty, empty, empty, empty, empty],
-  [empty, empty, empty, empty, empty, empty, empty],
- [empty, empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty],
- [empty, empty, empty, empty, empty, empty, empty, empty],     
-  [empty, empty, empty, empty, empty, empty, empty],
-   [empty, empty, empty, empty, empty, empty],
-      [empty, empty, empty, empty, empty]
-]).
-
-board(12,[
-   [empty, empty, empty, empty, empty],
-   [empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty,empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty,empty],
-[empty, empty, empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty, empty],     
-[empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty],
-   [empty, empty, empty, empty, empty]   
-]).
