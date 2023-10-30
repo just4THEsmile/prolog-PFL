@@ -11,7 +11,8 @@
 %The play/0 starts the Game
 play:-
     configurations(Gamestate),!,
-    game_cycle(Gamestate),
+    game_cycle_first_phase(Gamestate),
+    game_cycle_second_phase(Gamestate),
     true.
 
 

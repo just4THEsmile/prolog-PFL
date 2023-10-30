@@ -52,3 +52,8 @@ write_hexagon_tile(whitewhite):-
     write('W').
 write_hexagon_tile(blackblack):-
     write('B').
+
+
+print_stats([_,Player,_]):-
+    name_of_the_player( Player, Name ),
+    format('It's Player ~a turn. Good luck!', [Name]).
