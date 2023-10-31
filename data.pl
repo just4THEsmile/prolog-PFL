@@ -2,7 +2,7 @@
 :- dynamic difficulty/2.
 
 
-board(8,[
+board(5,[
          [empty, empty, empty, empty, empty],
       [empty, empty, empty, empty, empty, empty],
      [empty, empty, empty, empty, empty, empty, empty],
@@ -14,7 +14,7 @@ board(8,[
          [empty, empty, empty, empty, empty]
 ]).
 
-board(10,[
+board(6,[
          [empty, empty, empty, empty, empty, empty],
          [empty, empty, empty, empty, empty, empty ,empty],
       [empty, empty, empty, empty, empty, empty, empty, empty],
