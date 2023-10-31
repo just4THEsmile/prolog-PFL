@@ -5,15 +5,19 @@
     first_phase_over(Gamestate).
 */
 game_cycle_first_phase(Gamestate):-
-    display_board(Gamestate),
-    print_stats(Gamestate),
-    put_piece_input(Gamestate, Put, white),
-    put_piece_move(Gamestate, Put, NewGamestate, white),!,
-    display_board(NewGamestate),
-    put_piece_input(NewGamestate, Put2, black),
-    put_piece_move(NewGamestate, Put2, NewGamestate2, black),!,
-    change_player(NewGamestate2, NewGamestate3),
-    game_cycle_first_phase(NewGamestate3).
+    (disks(WhitePieces, BlackPieces), WhitePieces = 0, BlackPieces = 0) ->
+        write('No more pieces available for both players. Moving to the next phase.'), nl
+    ;
+        display_board(Gamestate),
+        print_stats(Gamestate),
+        put_piece_input(Gamestate, Put, white),
+        put_piece_move(Gamestate, Put, NewGamestate, white),
+        display_board(NewGamestate),
+        put_piece_input(NewGamestate, Put2, black),
+        put_piece_move(NewGamestate, Put2, NewGamestate2, black),
+        change_player(NewGamestate2, NewGamestate3),
+        game_cycle_first_phase(NewGamestate3).
+
 
 game_cycle_second_phase(Gamestate):-
     game_over(Gamestate, Winner),
@@ -47,7 +51,6 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
     !.
 
 put_piece_input(_,_,Color):-
-    format('No more ~a pieces available.\n', [Color]),
     fail.
 
 valid_put_piece([Row, Column], Size) :-
@@ -110,6 +113,4 @@ decrement_black_pieces:-
     asserta(disks(WhitePieces, NewBlackPieces)).
 
 change_player([Board, Player], [Board, NewPlayer]) :-
-    (Player = 1 -> NewPlayer = 2
-    ; Player = 2 -> NewPlayer = 1
-    ).
+    (Player = 1 -> NewPlayer = 2; Player = 2 -> NewPlayer = 1).
