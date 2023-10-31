@@ -16,7 +16,8 @@ print_board_rows(_, NumRows, NumRows):-!.
 print_board_rows(Board, NumRows, MaxRows):-
     length(Board, BoardLength),
     NumSpaces is abs(NumRows - (BoardLength + 1) // 2),
-    NumSpaces1 is NumSpaces + 55,
+    NumSpaces1 is NumSpaces*2,
+    write('\n'),
     print_spaces(NumSpaces1),
     nth1(NumRows, Board, Row),
     write_row(Row),
@@ -34,7 +35,7 @@ print_spaces(N):-
 write_row([]).
 write_row([H|T]):-
     write_hexagon_tile(H),
-    write(' '),
+    write('  '),
     write_row(T).
 
 write_hexagon_tile(empty):-
