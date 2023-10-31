@@ -4,7 +4,7 @@
 
 
 display_board([Board,_]):-
-    %clear,
+    clear,
     length(Board, BoardLength),
     True_BoardLength is (BoardLength + 1) ,
     print_board_rows(Board,1,True_BoardLength),

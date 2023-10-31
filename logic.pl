@@ -30,7 +30,7 @@ game_cycle_second_phase(Gamestate):-
 
 
 put_piece_input([Board,Player], [Row, Column], Color) :-
-    (Player = 1, player_pieces(player1, WhitePieces, BlackPieces); Player = 2, player_pieces(player2, WhitePieces, BlackPieces)),
+    disks(WhitePieces, BlackPieces),
     (Color = white, WhitePieces > 0; Color = black, BlackPieces > 0),
     repeat,
     format('Choose a position to put a ~a piece: ', [Color]),
@@ -42,7 +42,7 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
     Column is ColumnCode - 48, %  column value
     valid_put_piece([Row, Column], 9),  % change the last argument depending of board size
     is_empty(Board,Row,Column),
-    (Color = white -> decrement_white_pieces(Player); Color =  black -> decrement_black_pieces(Player)), % Decrement pieces count based on color
+    (Color = white -> decrement_white_pieces; Color =  black -> decrement_black_pieces), % Decrement pieces count based on color
     format('Valid position: ~a~d\n', [RowChar, Column]),
     !.
 
@@ -99,24 +99,15 @@ update_row(RowIndex, NewRow, [H|T], [H|UpdatedT]) :-
     RowIndex1 is RowIndex - 1,
     update_row(RowIndex1, NewRow, T, UpdatedT).
 
-decrement_white_pieces(Player) :-
-    (Player = 1 -> retract(player_pieces(player1, WhitePieces, BlackPieces)),
-                  NewWhitePieces is WhitePieces - 1,
-                  asserta(player_pieces(player1, NewWhitePieces, BlackPieces))
-    ; Player = 2 -> retract(player_pieces(player2, WhitePieces, BlackPieces)),
-                   NewWhitePieces is WhitePieces - 1,
-                   asserta(player_pieces(player2, NewWhitePieces, BlackPieces))
-    ).
+decrement_white_pieces:-
+    retract(disks(WhitePieces, BlackPieces)),
+    NewWhitePieces is WhitePieces - 1,
+    asserta(disks(NewWhitePieces, BlackPieces)).
 
-
-decrement_black_pieces(Player) :-
-    (Player = 1 -> retract(player_pieces(player1, WhitePieces, BlackPieces)),
-                  NewBlackPieces is BlackPieces - 1,
-                  asserta(player_pieces(player1, WhitePieces, NewBlackPieces))
-    ; Player = 2 -> retract(player_pieces(player2, WhitePieces, BlackPieces)),
-                   NewBlackPieces is BlackPieces - 1,
-                   asserta(player_pieces(player2, WhitePieces, NewBlackPieces))
-    ).
+decrement_black_pieces:-
+    retract(disks(WhitePieces, BlackPieces)),
+    NewBlackPieces is BlackPieces - 1,
+    asserta(disks(WhitePieces, NewBlackPieces)).
 
 change_player([Board, Player], [Board, NewPlayer]) :-
     (Player = 1 -> NewPlayer = 2
