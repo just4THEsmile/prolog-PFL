@@ -3,8 +3,8 @@
 :- consult(utils).
 
 
-display_board([Board,_,_]):-
-    clear,
+display_board([Board,_]):-
+    %clear,
     length(Board, BoardLength),
     True_BoardLength is (BoardLength + 1) ,
     print_board_rows(Board,1,True_BoardLength),
@@ -56,7 +56,7 @@ write_hexagon_tile(blackblack):-
     write('B').
 
 
-print_stats([_,Player,_]):-
+print_stats([_,Player]):-
     (Player = 1 ->
         name_of_the_player(player1, Name)
     ; Player = 2 ->

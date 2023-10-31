@@ -1,6 +1,6 @@
 :- consult(data).
 
-configurations([Board,Player,0]):-
+configurations([Board,Player]):-
     drawStartMenu,
     getGamemode(Gamemode),
     !,

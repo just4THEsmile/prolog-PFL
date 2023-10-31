@@ -49,3 +49,4 @@ getBoardSize(Size):-
     read(Size),
     member(Size, [5,6]),
     clear_input.
+
