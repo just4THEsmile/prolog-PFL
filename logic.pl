@@ -6,6 +6,7 @@
 */
 game_cycle_first_phase(Gamestate):-
     display_board(Gamestate),
+    write('Here'),
     print_stats(Gamestate),
     true.
 /*    put_piece_input(Gamestate, Put),

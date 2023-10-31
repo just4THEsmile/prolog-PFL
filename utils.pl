@@ -45,7 +45,7 @@ getStartPlayer(StartPlayer):-
 
 getBoardSize(Size):-
     repeat,
-    write('Choose the number of rows that the board will have (8):'),
+    write('Choose the number of rows that the board will have (8 or 10):'),
     read(Size),
-    member(Size, [8]),
+    member(Size, [8,10]),
     clear_input.

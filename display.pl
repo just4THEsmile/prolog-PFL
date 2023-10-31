@@ -5,7 +5,9 @@
 
 display_board([Board,_,_]):-
     clear,
-    print_board_rows(Board,1,10),
+    length(Board, BoardLength),
+    True_BoardLength is (BoardLength + 1) ,
+    print_board_rows(Board,1,True_BoardLength),
     true.
     
 init_state(Size,Board):-
@@ -17,7 +19,7 @@ print_board_rows(Board, NumRows, MaxRows):-
     length(Board, BoardLength),
     NumSpaces is abs(NumRows - (BoardLength + 1) // 2),
     NumSpaces1 is NumSpaces*2,
-    write('\n'),
+    nl,
     print_spaces(NumSpaces1),
     nth1(NumRows, Board, Row),
     write_row(Row),
@@ -56,6 +58,6 @@ write_hexagon_tile(blackblack):-
 
 print_stats([_,Player,_]):-
     write(Player),
-    name_of_the_player(Player,Name),
+    name_of_the_player(Player,Name), %error Here
     format('Its Player ~a turn. Good luck!', [Name]),
     true.
