@@ -1,14 +1,16 @@
 :-consult(data).
 :-consult(display).
+:- use_module(library(system)).
 
 /*game_cycle_first_phase(Gamestate):-
     first_phase_over(Gamestate).
 */
 game_cycle_first_phase(Gamestate):-
+    display_board(Gamestate),
     (disks(WhitePieces, BlackPieces), WhitePieces = 0, BlackPieces = 0) ->
         write('No more pieces available for both players. Moving to the next phase.'), nl
     ;
-        display_board(Gamestate),
+        
         print_stats(Gamestate),
         put_piece_input(Gamestate, Put, white),
         put_piece_move(Gamestate, Put, NewGamestate, white),
@@ -19,43 +21,53 @@ game_cycle_first_phase(Gamestate):-
         game_cycle_first_phase(NewGamestate3).
 
 
-game_cycle_second_phase(Gamestate):-
-    game_over(Gamestate, Winner),
-    !,
-    display_end(Gamestate, Winner).
-
-game_cycle_second_phase(Gamestate):-
-    display_board(Gamestate), 
-    print_stats(Gamestate),
-    choose_piece(Gamestate, Move),
-    move_input(Gamestate, Move),
-    move(Gamestate, Move, NewGamestate),
-    game_cycle_second_phase(NewGamestate).
-
-
 put_piece_input([Board,Player], [Row, Column], Color) :-
     disks(WhitePieces, BlackPieces),
     (Color = white, WhitePieces > 0; Color = black, BlackPieces > 0),
     repeat,
     format('Choose a position to put a ~a piece: ', [Color]),
-    read(Input),
-    atom_chars(Input, [RowChar, ColumnChar|_]), % Convert input to a list of characters
-    char_code(RowChar, RowCode),
-    char_code(ColumnChar, ColumnCode),
+    getCoords([RowCode,Column|_],Player,Board),
     Row is RowCode, %  row value
-    Column is ColumnCode - 48, %  column value
-    valid_put_piece([Row, Column], 9),  % change the last argument depending of board size
+    length(Board,BoardSize),
+    valid_put_piece([Row, Column], BoardSize),  %  check if the position is valid
     is_empty(Board,Row,Column),
     (Color = white -> decrement_white_pieces; Color =  black -> decrement_black_pieces), % Decrement pieces count based on color
+    char_code(RowChar, RowCode),
     format('Valid position: ~a~d\n', [RowChar, Column]),
     !.
 
 put_piece_input(_,_,Color):-
     fail.
 
+getCoords([RowCode, ColumnCode|_], Player,Board):-
+    (
+        (Player = 1 -> name_of_the_player(player1, Name); Player = 2 -> name_of_the_player(player2, Name)),
+        \+ member(Name, ['FitBot', 'FatBot', 'Bot']),
+        read(Input),
+        atom_chars(Input, [RowChar, ColumnChar|_]), % Convert input to a list of characters
+        char_code(RowChar, RowCode),
+        char_code(ColumnChar, ColumnCodeUnrefined),
+        ColumnCode is ColumnCodeUnrefined - 48 %  column value   
+    );
+    (
+        (Player = 1 -> name_of_the_player(player1, Name), bot_difficulty(player1, Difficulty); 
+        Player = 2 -> name_of_the_player(player2, Name), bot_difficulty(player2, Difficulty)),
+        (
+            Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_],Board);
+            Difficulty = 2 -> getCoordsHard([RowCode, ColumnCode|_],Board)
+        )
+    ).
+
+getCoordsRandom([Row, Column],Board):-
+    length(Board,Size),
+    MaxRow is 97 + Size,
+    random(97, MaxRow, Row),
+    random(1, 10, Column).
+
 valid_put_piece([Row, Column], Size) :-
     valid_row(Row, Size),
-    valid_column(Column, Row, Size).
+    valid_column(Column, Row, Size),
+    not_in_center([Row,Column],Size).
 
 valid_row(Row, Size) :-
     Row >= 97, %  'a'
@@ -76,6 +88,11 @@ valid_max_column(Row, Size, MaxColumn) :-
     ;
         MaxColumn is abs(97 + Size - Row + SizeHalf - 1)
     ).
+
+not_in_center([Row,Column],Size):-
+    Center is Size // 2 + 1,
+    Row \= 97 + Center,
+    Column \= Center.
 
 is_empty(Board, Row, Column) :-
     RowIndex is Row - 97 + 1,
@@ -114,3 +131,17 @@ decrement_black_pieces:-
 
 change_player([Board, Player], [Board, NewPlayer]) :-
     (Player = 1 -> NewPlayer = 2; Player = 2 -> NewPlayer = 1).
+
+
+game_cycle_second_phase(Gamestate):-
+    game_over(Gamestate, Winner),
+    !,
+    display_end(Gamestate, Winner).
+
+game_cycle_second_phase(Gamestate):-
+    display_board(Gamestate), 
+    print_stats(Gamestate),
+    choose_piece(Gamestate, Move),
+    move_input(Gamestate, Move),
+    move(Gamestate, Move, NewGamestate),
+    game_cycle_second_phase(NewGamestate).

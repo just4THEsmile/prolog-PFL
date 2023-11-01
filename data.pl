@@ -1,5 +1,5 @@
 :- dynamic name_of_the_player/2.
-:- dynamic difficulty/2.
+:- dynamic bot_difficulty/2.
 :- dynamic disks/2. % disks(numWhites,numBlacks)
 
 
