@@ -20,4 +20,4 @@ play:-
 
 
 initialize_player_pieces:-
-    asserta(disks(2,2)).
+    asserta(disks(11,11)).

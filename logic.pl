@@ -33,6 +33,7 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
     is_empty(Board,Row,Column),
     (Color = white -> decrement_white_pieces; Color =  black -> decrement_black_pieces), % Decrement pieces count based on color
     char_code(RowChar, RowCode),
+    sleep(1),
     format('Valid position: ~a~d\n', [RowChar, Column]),
     !.
 
@@ -54,7 +55,7 @@ getCoords([RowCode, ColumnCode|_], Player,Board):-
         Player = 2 -> name_of_the_player(player2, Name), bot_difficulty(player2, Difficulty)),
         (
             Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_],Board);
-            Difficulty = 2 -> getCoordsHard([RowCode, ColumnCode|_],Board)
+            Difficulty = 2 -> getCoordsHard([RowCode,ColumnCode],[Board,Player])
         )
     ).
 
@@ -64,7 +65,26 @@ getCoordsRandom([Row, Column],Board):-
     random(97, MaxRow, Row),
     random(1, 10, Column).
 
-valid_put_piece([Row, Column], Size) :-
+
+getCoordsHard([Row,Column], [Board, Player]):-
+    valid_moves(Board, Player, ListOfMoves),
+    member([Row, Column], ListOfMoves),
+    write([Row,Column]).
+
+valid_moves(Board, Player, ListOfMoves):-
+    length(Board, Size),
+    Upper is 97 + Size - 1,
+    findall([R, C], (
+        between(1,Size,C),
+        between(97, Upper, R),
+        valid_row(R, Size),
+        valid_column(C, R, Size),
+        not_in_center([R, C], Size),
+        is_empty(Board, R, C)
+    ), ListOfMoves),
+    write(ListOfMoves).
+
+valid_put_piece([Row, Column], Size):-
     valid_row(Row, Size),
     valid_column(Column, Row, Size),
     not_in_center([Row,Column],Size).
