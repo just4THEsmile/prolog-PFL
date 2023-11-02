@@ -450,8 +450,10 @@ move_piece([Board,Player],[NewBoard,Player]):-
     getCoords([Row2, Col2], Player, Board,_),
     inBoard(Row2-Col2,Board),
     RealRow2 is Row2-97+1,
-    get_distance_in_line(RealRow-Col,RealRow2-Col2,CheckRange),
-    CheckRange =:= Range,
+    length(Board,Size),
+    Side_Size is ((Size+1)//2),
+    get_distance_in_line(RealRow-Col,RealRow2-Col2,Side_Size,CheckRange),
+    CheckRange =:= Range,nl,
     check_if_destination_is_clear_or_has_one_level(RealRow2-Col2,Board),
     move_aux(RealRow-Col,RealRow2-Col2,Board,NewBoard, Player).
 
@@ -472,54 +474,55 @@ move_aux(Row-Col,Row2-Col2,Board,NewNewBoard, Player):-
     black(Player),
     remove_top_piece(Row-Col, Board,NewBoard, Player),
     add_top_piece(Row2-Col2, black, NewBoard , NewNewBoard,Player).      
-
+    
 remove_top_piece(Row-Col ,Board, NewBoard, Player):-
     nth1(Row, Board, BoardRow),
     nth1(Col, BoardRow, PieceColor),
-        (((PieceColor =:= white) ; (PieceColor =:= black) )->
 
-            NewColor is clear;
-        ((PieceColor =:= whitewhite) ; (PieceColor =:= blackwhite) ) ->
+        (((PieceColor = white) ; (PieceColor = black) )->
 
-            NewColor is white;
+            NewColor = empty;
+        ((PieceColor = whitewhite) ; (PieceColor = blackwhite) ) ->
 
-        ((PieceColor =:= whiteblack) ; (PieceColor =:= blackblack) ) ->
+            NewColor = white;
 
-            NewColor is black
+        ((PieceColor = whiteblack) ; (PieceColor = blackblack) ) ->
+
+            NewColor = black
         ),
-
-    put_piece_move([Board, Player], [Row, Col], [NewBoard, Player], NewColor).  
+    AddaptedRow is Row + 97 - 1,
+    put_piece_move([Board, Player], [AddaptedRow, Col], [NewBoard, Player], NewColor).  
 
 
 add_top_piece(Row-Col, Color, Board,NewBoard, Player):-
     nth1(Row, Board, BoardRow),
     nth1(Col, BoardRow, PieceColor),
-    (PieceColor =:= white->
+    (PieceColor = white->
 
-        (Color =:= white ->
+        (Color = white ->
 
-            NewColor is whitewhite;
+            NewColor = whitewhite;
 
-        Color =:= black ->
+        Color = black ->
 
-            NewColor is blackwhite);
-    PieceColor =:= black  ->
+            NewColor = blackwhite);
+    PieceColor = black  ->
 
-        (Color =:= white ->
+        (Color = white ->
 
-            NewColor is whiteblack;
+            NewColor = whiteblack;
 
-        Color =:= black ->
+        Color = black ->
 
-            NewColor is blackblack);
+            NewColor = blackblack);
         
         
-    PieceColor =:= clear  ->
+    PieceColor = empty  ->
 
-        NewColor is Color
+        NewColor = Color
     ),
-
-    put_piece_move([Board, Player], [Row, Col], [NewBoard, Player], NewColor).     
+    AddaptedRow is Row + 97 - 1,
+    put_piece_move([Board, Player], [AddaptedRow, Col], [NewBoard, Player], NewColor).     
 
 %    get_distance_in_line
 
