@@ -18,7 +18,7 @@ getLine(Result, Acc) :-
     atom_chars(Result, Acc).
 
 getPlayerName(Player):-
-    format('Hello ~a, what is your name? ', [Player]),
+    format('\nHello ~a, what is your name? ', [Player]),
     getLine(Name, []),
     asserta(name_of_the_player(Player, Name)),
     clear_input.
@@ -41,6 +41,8 @@ getStartPlayer(StartPlayer):-
     repeat,
     read(StartPlayer),
     between(1,2,StartPlayer),
+    asserta(white(StartPlayer)),
+    (StartPlayer =:= 1 -> asserta(black(2)); asserta(black(1))),
     clear_input.
 
 getBoardSize(Size):-
@@ -50,3 +52,11 @@ getBoardSize(Size):-
     member(Size, [5,6]),
     clear_input.
 
+manhattan_distance([Row1, Column1], [Row2, Column2], Distance):-
+    Distance is abs(Row1 - Row2) + abs(Column1 - Column2).
+
+
+sum_list([], 0).
+sum_list([X|Xs], Sum):-
+    sum_list(Xs, RestSum),
+    Sum is X + RestSum.
