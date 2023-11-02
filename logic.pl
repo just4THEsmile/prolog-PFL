@@ -298,23 +298,24 @@ check_game_over(_):-
     !,
     fail.
 
-check_if_black_wins([Matrix,Player]):-
-    black(Player),
+check_if_black_wins([Matrix,_]):-
+    write('black wins:'),nl,
     length(Matrix,Num_rows),
-    Side_size is (Num_rows+1)//2,
+    Side_size is ((Num_rows+1)//2),
     find_Values(blackblack, blackwhite, Matrix,Indices),
-    check_3in_line(Indices, Player, Side_size).
+    check_3in_line(Indices, black, Side_size).
 
 
 
 
 
-check_if_white_wins([Matrix,Player]):-
-    white(Player),
+check_if_white_wins([Matrix,_]):-
+    write('white wins:'),nl,
     length(Matrix,Num_rows),
-    Side_size is (Num_rows+1)//2,
+    Side_size is ((Num_rows+1)//2),
     find_Values(whiteblack, whitewhite, Matrix,Indices),
-    check_3in_line(Indices, Player, Side_size).
+    write(Indices),nl,
+    check_3in_line(Indices, white, Side_size).
 
 % auxilliary fuctions ------------------------------------
 
@@ -372,10 +373,13 @@ check_3in_line([_|Tail],Player,Side_size):-
 
 %for horizontal lines
 one_in_line_aux(Row-Col,List,_):-
+    write('horizontal1'),nl,
     Col2 is Col+1,
     member(Row-Col2,List),
+    write('horizontal2'),nl,
     Col3 is Col2+1,
-    member(Row-Col3,List).
+    member(Row-Col3,List),
+    write('horizontal3'),nl.
 
 %for horizontal lines
 one_in_line_aux(Row-Col,List,_):-
