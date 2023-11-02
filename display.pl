@@ -1,18 +1,21 @@
 :- consult(data).
 :- consult(utils).
 
-
+% display_game(+GameState)
+% Displays the board.
 display_game([Board,_]):-
-    %clear,
     length(Board, BoardLength),
     True_BoardLength is (BoardLength + 1) ,
-    print_board_rows(Board,1,True_BoardLength),
+    print_board_rows(Board,1,True_BoardLength), nl,
     true.
-    
+
+% init_state(+Size, -Board)
+% Initializes the board with the given size.  
 init_state(Size,Board):-
     board(Size,Board).
 
-
+% print_board_rows(+Board, +NumRows, +MaxRows)
+% Prints the board rows.
 print_board_rows(_, NumRows, NumRows):-!.
 print_board_rows(Board, NumRows, MaxRows):-
     length(Board, BoardLength),
@@ -26,6 +29,8 @@ print_board_rows(Board, NumRows, MaxRows):-
     NextNumRows is NumRows + 1,
     print_board_rows(Board, NextNumRows, MaxRows).
 
+% print_spaces(+N)
+% Prints N spaces.
 print_spaces(0).
 print_spaces(N):-
     N > 0,
@@ -33,12 +38,16 @@ print_spaces(N):-
     NextN is N - 1,
     print_spaces(NextN).
 
+% write_row(+Row)
+% Writes a row of the board.
 write_row([]).
 write_row([H|T]):-
     write_hexagon_tile(H),
     write('  '),
     write_row(T).
 
+% write_hexagon_tile(+Tile)
+% Writes a tile of the board according to the atom.
 write_hexagon_tile(empty):-
     put_code(9711).
 write_hexagon_tile(white):-
@@ -54,7 +63,8 @@ write_hexagon_tile(whitewhite):-
 write_hexagon_tile(blackblack):-
     write('B').
 
-
+% print_stats(+GameState)
+% Prints the player which plays the turn.
 print_stats([_,Player]):-
     (Player = 1 ->
         name_of_the_player(player1, Name)
