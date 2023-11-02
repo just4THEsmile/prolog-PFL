@@ -1,12 +1,12 @@
 :-consult(data).
 :-consult(display).
-:- use_module(library(system)).
+:- use_module(library(lists)).
 
 /*game_cycle_first_phase(Gamestate):-
     first_phase_over(Gamestate).
 */
 game_cycle_first_phase(Gamestate):-
-    display_board(Gamestate),
+    display_game(Gamestate),
     (disks(WhitePieces, BlackPieces), WhitePieces = 0, BlackPieces = 0) ->
         write('No more pieces available for both players. Moving to the next phase.'), nl
     ;
@@ -14,7 +14,7 @@ game_cycle_first_phase(Gamestate):-
         print_stats(Gamestate),
         put_piece_input(Gamestate, Put, white),
         put_piece_move(Gamestate, Put, NewGamestate, white),
-        display_board(NewGamestate),
+        display_game(NewGamestate),
         put_piece_input(NewGamestate, Put2, black),
         put_piece_move(NewGamestate, Put2, NewGamestate2, black),
         change_player(NewGamestate2, NewGamestate3),
@@ -26,7 +26,7 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
     (Color = white, WhitePieces > 0; Color = black, BlackPieces > 0),
     repeat,
     format('Choose a position to put a ~a piece: ', [Color]),
-    getCoords([RowCode,Column|_],Player,Board),
+    getCoords([RowCode,Column|_],Player,Board,Color),
     Row is RowCode, %  row value
     length(Board,BoardSize),
     valid_put_piece([Row, Column], BoardSize),  %  check if the position is valid
@@ -40,7 +40,7 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
 put_piece_input(_,_,Color):-
     fail.
 
-getCoords([RowCode, ColumnCode|_], Player,Board):-
+getCoords([RowCode, ColumnCode|_], Player,Board,Color):-
     (
         (Player = 1 -> name_of_the_player(player1, Name); Player = 2 -> name_of_the_player(player2, Name)),
         \+ member(Name, ['FitBot', 'FatBot', 'Bot']),
@@ -55,25 +55,89 @@ getCoords([RowCode, ColumnCode|_], Player,Board):-
         Player = 2 -> name_of_the_player(player2, Name), bot_difficulty(player2, Difficulty)),
         (
             Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_],Board);
-            Difficulty = 2 -> getCoordsHard([RowCode,ColumnCode],[Board,Player])
+            Difficulty = 2 -> getCoordsHard([RowCode,ColumnCode],[Board,Player],Color)
         )
     ).
 
 getCoordsRandom([Row, Column],Board):-
-    length(Board,Size),
-    MaxRow is 97 + Size,
-    random(97, MaxRow, Row),
-    random(1, 10, Column).
+    valid_moves(Board, ListOfMoves),
+    random_member([Row,Column],ListOfMoves).
 
+getCoordsHard([Row, Column], [Board, Player], Color):-
+    (white(Player) -> ColorPlayer = white; black(Player) -> ColorPlayer = black),
+    (Color = ColorPlayer -> 
+        get_own_pieces(Board, OwnPieces, ColorPlayer),
+        (OwnPieces = [] -> 
+            length(Board, Size),
+            CenterRow is 97 + Size // 2,
+            CenterColumn is Size // 2 + 1,
+            choose_random_move([CenterRow, CenterColumn], [Row, Column]),
+            format('Best Move: ~w\n', [[Row, Column]])
+        ;
+            valid_moves(Board, EmptyPositions),
+            evaluate_proximity(EmptyPositions, OwnPieces, [_, [Row, Column]]),
+            format('Best Move: ~w\n', [[Row, Column]])
+        )
+    ;
+        (ColorPlayer = white -> ColorAdversary = black; ColorAdversary = white),
+        get_own_pieces(Board, OpponentPieces, ColorAdversary),
+        (OpponentPieces = [] -> 
+            length(Board, Size),
+            CenterRow is 97 + Size // 2,
+            CenterColumn is Size // 2 + 1,
+            choose_random_move_other( Board, [Row, Column]),
+            format('Best Move: ~w\n', [[Row, Column]])
+        ;
+            write('Own Pieces: '), write(OpponentPieces), nl,
+            valid_moves(Board, EmptyPositions),
+            findall([DistanceNeg, [Row, Column]], (
+                member([Row, Column], EmptyPositions),
+                calculate_distances([Row, Column], OpponentPieces, Distances),
+                sum_list(Distances, Distance),
+                DistanceNeg is -Distance % Negate distance for sorting
+            ), Moves),
+            sort(Moves, SortedMoves),
+            nth1(_, SortedMoves, [_, [Row, Column]]),
+            format('Best Move: ~w\n', [[Row, Column]])
+        )
+    ).
 
-getCoordsHard([Row,Column], [Board, Player]):-
-    valid_moves(Board, Player, ListOfMoves),
-    member([Row, Column], ListOfMoves),
-    write([Row,Column]).
-
-valid_moves(Board, Player, ListOfMoves):-
+choose_random_move_other( Board, [Row, Column]):-
     length(Board, Size),
-    Upper is 97 + Size - 1,
+    ExtremeCorner is 97 + Size - 1,
+    ExtremeCorner2 is ceiling(Size/2),
+    Corner1 = [97, 1],
+    Corner2 = [97, ExtremeCorner2],
+    Corner3 = [ExtremeCorner, 1],
+    Corner4 = [ExtremeCorner, ExtremeCorner2],
+    Corners = [Corner1, Corner2, Corner3, Corner4],
+    random_member([Row, Column], Corners).
+
+choose_random_move([CenterRow, CenterColumn], [Row, Column]):-
+    SurroundingTiles = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1]],
+    random_member([RRow,RColumn],SurroundingTiles),
+    Row is CenterRow + RRow,
+    Column is CenterColumn + RColumn.
+
+calculate_distances([EmptyRow, EmptyColumn], OwnPieces, Distances):-
+    findall(Distance, (
+        member([OwnRow, OwnColumn], OwnPieces),
+        manhattan_distance([OwnRow, OwnColumn], [EmptyRow, EmptyColumn], Distance)
+    ), Distances).
+
+evaluate_proximity(EmptyPositions, OwnPieces, BestMove):-
+    findall([SumDistances, [Row, Column]], (
+        nth1(_, EmptyPositions, [Row, Column]),
+        calculate_distances([Row, Column], OwnPieces, Distances),
+        sum_list(Distances, SumDistances)
+    ), Moves),
+    sort(Moves, SortedMoves),
+    write('Sorted Moves: '), write(SortedMoves), nl,
+    nth1(_, SortedMoves, BestMove).
+
+valid_moves(Board, ListOfMoves):-
+    length(Board, Size),
+    Upper is 97 + Size,
     findall([R, C], (
         between(1,Size,C),
         between(97, Upper, R),
@@ -81,8 +145,15 @@ valid_moves(Board, Player, ListOfMoves):-
         valid_column(C, R, Size),
         not_in_center([R, C], Size),
         is_empty(Board, R, C)
-    ), ListOfMoves),
-    write(ListOfMoves).
+    ), ListOfMoves).
+
+get_own_pieces(Board,ListofPieces,ColorPlayer):-
+    findall([R,C], (
+        nth1(RowIndex, Board, BoardRow),
+        nth1(ColumnIndex, BoardRow, ColorPlayer),
+        R is 97 + RowIndex,
+        C is ColumnIndex
+    ), ListofPieces).
 
 valid_put_piece([Row, Column], Size):-
     valid_row(Row, Size),
@@ -101,7 +172,7 @@ valid_column(Column, Row, Size) :-
     Column =< MaxColumn,
     !.
 
-valid_max_column(Row, Size, MaxColumn) :-
+valid_max_column(Row, Size, MaxColumn):-
     SizeHalf is ceiling(Size / 2),
     (Row < 97 + SizeHalf ->
         MaxColumn is abs(Row - 97 + ceiling(Size/2))
@@ -109,32 +180,32 @@ valid_max_column(Row, Size, MaxColumn) :-
         MaxColumn is abs(97 + Size - Row + SizeHalf - 1)
     ).
 
-not_in_center([Row,Column],Size):-
-    Center is Size // 2 + 1,
-    Row \= 97 + Center,
-    Column \= Center.
+not_in_center([Row, Column], Size):-
+    CenterRow is 97 + Size // 2,
+    CenterColumn is Size // 2 + 1,
+    (Row \= CenterRow ; Column \= CenterColumn).
 
-is_empty(Board, Row, Column) :-
+is_empty(Board, Row, Column):-
     RowIndex is Row - 97 + 1,
     ColumnIndex is Column,
     nth1(RowIndex, Board, BoardRow),
     nth1(ColumnIndex, BoardRow, empty).
 
 
-put_piece_move([Board, Player], [Row, Column], [NewBoard, Player], Color) :-
+put_piece_move([Board, Player], [Row, Column], [NewBoard, Player], Color):-
     RowIndex is Row - 97 + 1,
     nth1(RowIndex, Board, BoardRow),
     update_column(Column, Color, BoardRow, NewBoardRow),
     update_row(RowIndex, NewBoardRow, Board, NewBoard).
 
 update_column(1, Element, [_|Rest], [Element|Rest]).
-update_column(Column, Element, [H|T], [H|UpdatedT]) :-
+update_column(Column, Element, [H|T], [H|UpdatedT]):-
     Column > 1,
     Column1 is Column - 1,
     update_column(Column1, Element, T, UpdatedT).
 
 update_row(1, NewRow, [_|T], [NewRow|T]).
-update_row(RowIndex, NewRow, [H|T], [H|UpdatedT]) :-
+update_row(RowIndex, NewRow, [H|T], [H|UpdatedT]):-
     RowIndex > 1,
     RowIndex1 is RowIndex - 1,
     update_row(RowIndex1, NewRow, T, UpdatedT).
@@ -149,7 +220,7 @@ decrement_black_pieces:-
     NewBlackPieces is BlackPieces - 1,
     asserta(disks(WhitePieces, NewBlackPieces)).
 
-change_player([Board, Player], [Board, NewPlayer]) :-
+change_player([Board, Player], [Board, NewPlayer]):-
     (Player = 1 -> NewPlayer = 2; Player = 2 -> NewPlayer = 1).
 
 
@@ -159,7 +230,7 @@ game_cycle_second_phase(Gamestate):-
     display_end(Gamestate, Winner).
 
 game_cycle_second_phase(Gamestate):-
-    display_board(Gamestate), 
+    display_game(Gamestate), 
     print_stats(Gamestate),
     choose_piece(Gamestate, Move),
     move_input(Gamestate, Move),

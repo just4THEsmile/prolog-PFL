@@ -1,9 +1,8 @@
-:- use_module(library(lists)).
 :- consult(data).
 :- consult(utils).
 
 
-display_board([Board,_]):-
+display_game([Board,_]):-
     %clear,
     length(Board, BoardLength),
     True_BoardLength is (BoardLength + 1) ,
