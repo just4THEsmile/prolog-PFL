@@ -18,7 +18,7 @@ getLine(Result, Acc) :-
     atom_chars(Result, Acc).
 
 getPlayerName(Player):-
-    format('Hello ~a, what is your name? ', [Player]),
+    format('\nHello ~a, what is your name? ', [Player]),
     getLine(Name, []),
     asserta(name_of_the_player(Player, Name)),
     clear_input.
