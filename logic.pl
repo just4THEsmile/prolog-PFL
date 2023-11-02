@@ -8,7 +8,8 @@
 game_cycle_first_phase(Gamestate):-
     display_board(Gamestate),
     (disks(WhitePieces, BlackPieces), WhitePieces = 0, BlackPieces = 0) ->
-        write('No more pieces available for both players. Moving to the next phase.'), nl
+        write('No more pieces available for both players. Moving to the next phase.'), nl,
+        game_cycle_second_phase(Gamestate)
     ;
         
         print_stats(Gamestate),
@@ -37,7 +38,7 @@ put_piece_input([Board,Player], [Row, Column], Color) :-
     format('Valid position: ~a~d\n', [RowChar, Column]),
     !.
 
-put_piece_input(_,_,Color):-
+put_piece_input(_,_,_):-
     fail.
 
 getCoords([RowCode, ColumnCode|_], Player,Board):-
@@ -71,7 +72,7 @@ getCoordsHard([Row,Column], [Board, Player]):-
     member([Row, Column], ListOfMoves),
     write([Row,Column]).
 
-valid_moves(Board, Player, ListOfMoves):-
+valid_moves(Board, _, ListOfMoves):-
     length(Board, Size),
     Upper is 97 + Size - 1,
     findall([R, C], (
@@ -154,14 +155,358 @@ change_player([Board, Player], [Board, NewPlayer]) :-
 
 
 game_cycle_second_phase(Gamestate):-
-    game_over(Gamestate, Winner),
-    !,
-    display_end(Gamestate, Winner).
+    check_game_over(Gamestate).
 
 game_cycle_second_phase(Gamestate):-
     display_board(Gamestate), 
     print_stats(Gamestate),
-    choose_piece(Gamestate, Move),
-    move_input(Gamestate, Move),
-    move(Gamestate, Move, NewGamestate),
-    game_cycle_second_phase(NewGamestate).
+    move_piece(Gamestate, NewGamestate),
+    change_player(NewGamestate, NewGamestate2),
+    game_cycle_second_phase(NewGamestate2).
+
+
+
+
+
+%------------------------------------functions to check if victory conditions are met ----------------------------------------------------------------------------
+
+check_game_over(Gamestate):-
+    check_if_white_wins(Gamestate).
+
+check_game_over(Gamestate):-
+    check_if_black_wins(Gamestate).    
+
+check_game_over(_):-
+    !,
+    fail.
+
+check_if_black_wins([Matrix,_]):-
+    black(Player),
+    length(Matrix,Num_rows),
+    Side_size is (Num_rows+1)//2,
+    find_Values(blackblack, blackwhite, Matrix,Indices),
+    check_3in_line(Indices, Player, Side_size).
+
+
+
+
+
+check_if_black_wins([Matrix,_]):-
+    white(Player),
+    length(Matrix,Num_rows),
+    Side_size is (Num_rows+1)//2,
+    find_Values(whiteblack, whitewhite, Matrix,Indices),
+    check_3in_line(Indices, Player, Side_size).
+
+% auxilliary fuctions ------------------------------------
+
+% Define a predicate to find the indices of two values in a matrix and return them as a list
+find_Values( Value1, Value2,Matrix, Indices) :-
+    find_indices(Matrix, 1, Value1, Value2, [], Indices),!.
+
+% Base case: When all rows are checked
+find_indices([], _, _, _, Indices, Indices).
+
+% Iterate through each row of the matrix
+find_indices([Row|Rest], RowIndex, Value1, Value2, Acc, Indices) :-
+    find_indices_in_row(Row, RowIndex, 1, Value1, Value2, [], RowIndices),
+    NextRowIndex is RowIndex + 1,
+    append(Acc, RowIndices, NewAcc),
+    find_indices(Rest, NextRowIndex, Value1, Value2, NewAcc, Indices).
+
+% Base case: When all columns in a row are checked
+find_indices_in_row([], _, _, _, _, Indices, Indices).
+
+% Iterate through each column in a row
+find_indices_in_row([Element|Rest], RowIndex, ColIndex, Value1, Value2, Acc, Indices) :-
+    Element = Value2,
+    append(Acc, [RowIndex-ColIndex], NewAcc),
+    NextColIndex is ColIndex + 1,
+    find_indices_in_row(Rest, RowIndex, NextColIndex, Value1, Value2, NewAcc, Indices).
+
+find_indices_in_row([Element|Rest], RowIndex, ColIndex, Value1, Value2, Acc, Indices) :-
+    Element = Value1,
+    % If the current element matches the first desired value, add its indices to the list
+    append(Acc, [(RowIndex-ColIndex)], NewAcc),
+    NextColIndex is ColIndex + 1,
+    find_indices_in_row(Rest, RowIndex, NextColIndex, Value1, Value2, NewAcc, Indices).
+
+find_indices_in_row([_|Rest], RowIndex, ColIndex, Value1, Value2, Acc, Indices) :-
+        % If neither of the desired values is found, just continue to the next column
+        NextColIndex is ColIndex + 1,
+        find_indices_in_row(Rest, RowIndex, NextColIndex, Value1, Value2, Acc, Indices).
+
+
+
+% end of auxilliary fuctions ----------------------------------------------  
+
+check_3in_line([],_,_):- 
+!,
+fail.
+
+check_3in_line([Row-Col|Tail],Player,Side_size):-
+    one_in_line_aux(Row-Col, Tail, Side_size),
+        format('Congrats ~a won pretty easily!!!!!!!!!!!!!', [Player]),!, nl.
+
+check_3in_line([_|Tail],Player,Side_size):-
+    check_3in_line(Tail, Player, Side_size).
+
+
+%for horizontal lines
+one_in_line_aux(Row-Col,List,_):-
+    Col2 is Col+1,
+    member(Row-Col2,List),
+    Col3 is Col2+1,
+    member(Row-Col3,List).
+
+%for horizontal lines
+one_in_line_aux(Row-Col,List,_):-
+    Col2 is Col-1,
+    member(Row-Col2,List),
+    Col3 is Col2-1,
+    member(Row-Col3,List).  
+
+%for diagonal lines
+
+%from top right to bottom left
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row < Side_size,
+    Row2 is Row+1,
+    member(Row2-Col,List),
+    Row2 < Side_size,
+    Row3 is Row2+1,
+    member(Row3-Col,List).
+
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row < Side_size,
+    Row2 is Row+1,
+    member(Row2-Col,List),
+    Row2 >= Side_size,
+    Row3 is Row2+1,
+    Col2 is Col-1,
+    member(Row3-Col2,List).
+
+
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row >= Side_size,
+    Row2 is Row+1,
+    Col2 is Col-1,
+    member(Row2-Col2,List),
+    Row3 is Row2+1,
+    Col3 is Col2-1,
+    member(Row3-Col3,List).
+
+%from top left to bottom right
+
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row < Side_size,
+    Row2 is Row+1,
+    Col2 is Col+1,
+    member(Row2-Col2,List),
+    Row2 < Side_size,
+    Row3 is Row2+1,
+    Col3 is Col2+1,
+    member(Row3-Col3,List).
+
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row < Side_size,
+    Row2 is Row+1,
+    Col2 is Col+1,
+    member(Row2-Col2,List),
+    Row2 >= Side_size,
+    Row3 is Row2+1,
+    member(Row3-Col2,List).
+
+
+one_in_line_aux(Row-Col,List,Side_size):-
+    Row >= Side_size,
+    Row2 is Row+1,
+    member(Row2-Col,List),
+    Row3 is Row2+1,
+    member(Row3-Col,List).
+
+%-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+inBoard(Row-Col,Board):-
+    length(Board,Size),
+    valid_row(Row, Size),
+    valid_column(Col, Row, Size).
+
+check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
+    white(Player),
+    find_Values(whiteblack, whitewhite, Board, Indices),
+    member(Row-Col,Indices),
+    Range is 2.
+
+check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
+    white(Player),
+    find_Values(white, white, Board, Indices),
+    member(Row-Col,Indices),
+    Range is 1.
+
+check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
+    black(Player),
+    find_Values(blackblack, blackwhite, Board, Indices),
+    member(Row-Col,Indices),
+    Range is 2.
+
+check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
+    black(Player),
+    find_Values(black, black, Board, Indices),
+    member(Row-Col,Indices),
+    Range is 1.   
+
+check_if_destination_is_clear_or_has_one_level(Row-Col,Board):-
+    find_Values(whiteblack, whitewhite, Board, Indices),
+    \+ member(Row-Col,Indices),
+    find_Values(blackblack, blackwhite, Board, Indices2),
+    \+ member(Row-Col,Indices2).
+
+
+move_piece([Board,Player],[NewBoard,Player]):-
+    name_of_the_player(Player, Name),
+    format('Player: ~a choose the piece you want to move', [Name]),nl,
+    getCoords([Row, Col], Player, Board),
+    RealRow is Row-97+1,
+    check_if_piece_is_from_player(RealRow-Col,Player,Board,Range),
+    format('Player: ~a choose a position to move the piece to:', [Name]), nl,
+    getCoords([Row2, Col2], Player, Board),
+    inBoard(RealRow2-Col2,Board),
+    RealRow2 is Row2-97+1,
+    get_distance_in_line(RealRow-Col,RealRow2-Col2,CheckRange),
+    CheckRange =:= Range,
+    check_if_destination_is_clear_or_has_one_level(RealRow2-Col2,Board),
+    move_aux(RealRow-Col,RealRow2-Col2,Board,NewBoard, Player).
+
+  
+move_piece([Board,Player],[NewBoard,Player]):-
+    write('Move not valid. Try again.'), nl,
+    move_piece([Board,Player],[NewBoard,Player]).     
+
+  
+
+
+move_aux(Row-Col,Row2-Col2,Board,NewNewBoard, Player):-
+    white(Player),
+    remove_top_piece(Row-Col, Board,NewBoard, Player),
+    add_top_piece(Row2-Col2, white, NewBoard , NewNewBoard,Player).    
+
+move_aux(Row-Col,Row2-Col2,Board,NewNewBoard, Player):-
+    black(Player),
+    remove_top_piece(Row-Col, Board,NewBoard, Player),
+    add_top_piece(Row2-Col2, black, NewBoard , NewNewBoard,Player).      
+
+remove_top_piece(Row-Col ,Board, NewBoard, Player):-
+    nth1(Row, Board, BoardRow),
+    nth1(Col, BoardRow, PieceColor),
+        (((PieceColor =:= white) ; (PieceColor =:= black) )->
+
+            NewColor is clear;
+        ((PieceColor =:= whitewhite) ; (PieceColor =:= blackwhite) ) ->
+
+            NewColor is white;
+
+        ((PieceColor =:= whiteblack) ; (PieceColor =:= blackblack) ) ->
+
+            NewColor is black
+        ),
+
+    put_piece_move([Board, Player], [Row, Col], [NewBoard, Player], NewColor).  
+
+
+add_top_piece(Row-Col, Color, Board,NewBoard, Player):-
+    nth1(Row, Board, BoardRow),
+    nth1(Col, BoardRow, PieceColor),
+    (PieceColor =:= white->
+
+        (Color =:= white ->
+
+            NewColor is whitewhite;
+
+        Color =:= black ->
+
+            NewColor is blackwhite);
+    PieceColor =:= black  ->
+
+        (Color =:= white ->
+
+            NewColor is whiteblack;
+
+        Color =:= black ->
+
+            NewColor is blackblack);
+        
+        
+    PieceColor =:= clear  ->
+
+        NewColor is Color
+    ),
+
+    put_piece_move([Board, Player], [Row, Col], [NewBoard, Player], NewColor).     
+
+%    get_distance_in_line
+
+%-------------range-1-----------------------------------------------------------------------------------------------------------------------------------------------
+get_distance_in_line(Row-Col,Row2-Col2,_,Range):-
+    Row =:= Row2,
+    Range is abs(Col-Col2).
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row > Side_size,Row =:= (Row2 + 1), 
+    (Col=:=Col2; Col=:=Col2-1),
+    Range is 1.
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row > Side_size,Row =:= (Row2 - 1), 
+    (Col=:=Col2; Col=:=Col2+1),
+    Range is 1.    
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row < Side_size,Row =:= (Row2 + 1), 
+    (Col=:=Col2; Col=:=Col2+1),
+    Range is 1.
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row < Side_size,Row =:= (Row2 - 1), 
+    (Col=:=Col2; Col=:=Col2-1),
+    Range is 1.        
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row =:= Side_size,(Row =:= (Row2 - 1) ; Row =:= (Row2 + 1)), 
+    (Col=:=Col2; Col=:=Col2-1),
+    Range is 1.    
+%----range-2------------------------------------------------------------------------------------------------------------------------------------------------------
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row =:= Side_size, (Row =:= (Row2 - 2) ; Row =:= (Row2 + 2)), 
+    (Col=:=Col2; Col=:=Col2-2),
+    Range is 2.
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row =:= Side_size-1, Row =:= (Row2 - 2), 
+    (Col=:=Col2-1; Col=:=Col2+1),
+    Range is 2.    
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row =:= Side_size+1, Row =:= (Row2 + 2), 
+    (Col=:=Col2-1; Col=:=Col2+1),
+    Range is 2.        
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row > Side_size-1, Row =:= (Row2 - 2), 
+    (Col=:=Col2; Col=:=Col2+2),
+    Range is 2.
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row > Side_size-1, Row =:= (Row2 + 2), 
+    (Col=:=Col2 -2; Col=:=Col2),
+    Range is 2.    
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row < Side_size+1, Row =:= (Row2 - 2), 
+    (Col=:=Col2 - 2; Col=:=Col2),
+    Range is 2.
+
+get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
+    Row < Side_size+1, Row =:= (Row2 + 2), 
+    (Col=:=Col2 ; Col=:=Col2 + 2),
+    Range is 2.        
+    
