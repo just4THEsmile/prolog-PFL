@@ -196,8 +196,8 @@ valid_row(Row, Size) :-
     !. % Cut to prevent backtracking if the row is valid
 
 valid_row(Row, _) :-
-    char_code(RowChar,Row),
-    format('Invalid row: ~w~n', [RowChar]),
+    %char_code(RowChar,Row),
+    %format('Invalid row: ~w~n', [RowChar]),
     fail.
 
 % valid_column(Column, Row, Size)

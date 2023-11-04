@@ -58,7 +58,7 @@ getStartPlayer(StartPlayer):-
     read(StartPlayer),
     between(1,2,StartPlayer),
     asserta(black(StartPlayer)),
-    (StartPlayer =:= 1 -> asserta(black(2)); asserta(black(1))),
+    (StartPlayer =:= 1 -> asserta(white(2)); asserta(white(1))),
     clear_input.
 
 % getBoardSize(-Size)
