@@ -772,7 +772,6 @@ hexagonal_distance(X1-Y1, X2-Y2, Distance) :-
     Distance is max(HDistance, VDistance).
 
 get_Hard_Move_second_cycle(Move,[Board,Player]):-
-    write('Hello'),nl,
     hard_moves_second_part(Board,Player,ListOfMoves),
     write(ListOfMoves),nl,
     sort(ListOfMoves,ListOfMoves2),
@@ -883,7 +882,7 @@ check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     findall(R3-C3,(
         member(R2-C2,Indices),
         member(R3-C3,Indices),
-        \+((R=:=R3 , C=:=C3)),
+        \+((R1=:=R3 , C1=:=C3)),
         get_distance_in_line(R-C,R2-C2,Side_Size,Range),
         Range =:= 1,
         get_distance_in_line(R-C,R3-C3,Side_Size,Range1),
@@ -896,7 +895,7 @@ check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     findall(R3-C3,(
         member(R2-C2,Indices),
         member(R3-C3,Indices),
-        \+((R1=:=R3 , C1=:=C3)),      
+        \+((R=:=R3 , C=:=C3)),      
         get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
         Range =:= 1,
         get_distance_in_line(R1-C1,R3-C3,Side_Size,Range1),
@@ -929,7 +928,7 @@ check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     findall(R3-C3,(
         member(R2-C2,Indices),
         member(R3-C3,Indices),
-        \+((R=:=R3 , C=:=C3)),
+        \+((R1=:=R3 , C1=:=C3)),
         get_distance_in_line(R-C,R2-C2,Side_Size,Range),
         Range =:= 1,
         get_distance_in_line(R-C,R3-C3,Side_Size,Range1),
@@ -942,7 +941,7 @@ check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     findall(R3-C3,(
         member(R2-C2,Indices),
         member(R3-C3,Indices),
-        \+((R1=:=R3 , C1=:=C3)),        
+        \+((R=:=R3 , C=:=C3)),        
         get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
         Range =:= 1,
         get_distance_in_line(R1-C1,R3-C3,Side_Size,Range1),
@@ -960,4 +959,3 @@ check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     length(List2,NUM2),
     Num is NUM2 - NUM1 - NUM3*10 + NUM4*10.   
     
-     
