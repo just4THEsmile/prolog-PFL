@@ -674,7 +674,7 @@ inBoard_int(Row-Col,Board):-
 
 valid_row_int(Row, Size) :-
     Row > 0, %  'a'
-    Row < Size. 
+    Row =< Size. 
 
 % valid_column(Column, Row, Size)
 % Checks if a column is valid
@@ -838,30 +838,126 @@ get_Move_score(R-C,R1-C1,_,Board,Score,Player):-
     move_aux(R-C,R1-C1,Board,NewBoard, Player),
     check_game_over([NewBoard,Player],_),
     write([R-C,R1-C1]),nl,
-    Score is -99,!.
+    Score is -999,!.
 
-get_Move_score(R-C,_-_,Distance,Board,Score,_):-
-
+get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
+    check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     \+check_if_destination_is_clear_or_has_one_level(R-C,Board),
-    Score is Distance+4,!.
+    Score is Distance+4 - Num*2,!.
 
 
 
-get_Move_score(_-_,R1-C1,Distance,Board,Score,Player):-
-
+get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
+    check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     check_if_piece_is_from_player(R1-C1,Player,Board,_),
-    Score is Distance -1,!.
+    Score is Distance -1 - Num*2,!.
 
 
 
-get_Move_score(_-_,R1-C1,Distance,Board,Score,Player):-
-
+get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
+    check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     change_player([_,Player],[_,NextPlayer]),
     check_if_piece_is_from_player(R1-C1,NextPlayer,Board,_),
-    Score is Distance - 6,!.
+    Score is Distance - 2 - Num*2,!.
 
 
 
- get_Move_score(_-_,_-_,Distance,_,Score,_):-
-    Score is Distance+1,!.       
+get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
+    check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
+    Score is Distance - Num*2,!.      
+
+
+
+
+check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
+    white(Player),
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),    
+    find_Values(whiteblack, whitewhite, Board, Indices),
+    findall(R2-C2,(
+        member(R2-C2,Indices),
+        get_distance_in_line(R-C,R2-C2,Side_Size,Range),
+        Range =:= 1
+    ),List1),
+    length(List1,NUM1),
+    findall(R3-C3,(
+        member(R2-C2,Indices),
+        member(R3-C3,Indices),
+        \+((R=:=R3 , C=:=C3)),
+        get_distance_in_line(R-C,R2-C2,Side_Size,Range),
+        Range =:= 1,
+        get_distance_in_line(R-C,R3-C3,Side_Size,Range1),
+        Range1 =:= 2,
+        get_distance_in_line(R2-C2,R3-C3,Side_Size,Range2),
+        Range2 =:= 1
+    ),List3),
+    length(List3,NUM3),
+
+    findall(R3-C3,(
+        member(R2-C2,Indices),
+        member(R3-C3,Indices),
+        \+((R1=:=R3 , C1=:=C3)),      
+        get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
+        Range =:= 1,
+        get_distance_in_line(R1-C1,R3-C3,Side_Size,Range1),
+        Range1 =:= 2,
+        get_distance_in_line(R2-C2,R3-C3,Side_Size,Range2),
+        Range2 =:= 1
+    ),List4),
+    length(List4,NUM4),
+
+    findall(R2-C2,(
+        member(R2-C2,Indices),
+        get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
+        Range =:= 1
+    ),List2),
+    length(List2,NUM2),
+    Num is NUM2 - NUM1 - NUM3*10 + NUM4*10.     
+
+
+check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
+    black(Player), 
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),
+    find_Values(blackblack, blackwhite, Board, Indices),
+    findall(R2-C2,(
+        member(R2-C2,Indices),
+        get_distance_in_line(R-C,R2-C2,Side_Size,Range),
+        Range =:= 1
+    ),List1),
+    length(List1,NUM1),
+    findall(R3-C3,(
+        member(R2-C2,Indices),
+        member(R3-C3,Indices),
+        \+((R=:=R3 , C=:=C3)),
+        get_distance_in_line(R-C,R2-C2,Side_Size,Range),
+        Range =:= 1,
+        get_distance_in_line(R-C,R3-C3,Side_Size,Range1),
+        Range1 =:= 2,
+        get_distance_in_line(R2-C2,R3-C3,Side_Size,Range2),
+        Range2 =:= 1
+    ),List3),
+    length(List3,NUM3),
+
+    findall(R3-C3,(
+        member(R2-C2,Indices),
+        member(R3-C3,Indices),
+        \+((R1=:=R3 , C1=:=C3)),        
+        get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
+        Range =:= 1,
+        get_distance_in_line(R1-C1,R3-C3,Side_Size,Range1),
+        Range1 =:= 2,
+        get_distance_in_line(R2-C2,R3-C3,Side_Size,Range2),
+        Range2 =:= 1
+    ),List4),
+    length(List4,NUM4),
+
+    findall(R2-C2,(
+        member(R2-C2,Indices),
+        get_distance_in_line(R1-C1,R2-C2,Side_Size,Range),
+        Range =:= 1
+    ),List2),
+    length(List2,NUM2),
+    Num is NUM2 - NUM1 - NUM3*10 + NUM4*10.   
+    
      
