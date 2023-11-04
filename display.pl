@@ -49,19 +49,19 @@ write_row([H|T]):-
 % write_hexagon_tile(+Tile)
 % Writes a tile of the board according to the atom.
 write_hexagon_tile(empty):-
-    put_code(9711).
+    put_code(0x25CB).
 write_hexagon_tile(white):-
-    write('w').
+    put_code(0x25CE).
 write_hexagon_tile(black):-
-    write('b').
+    put_code(0x25C9).
 write_hexagon_tile(whiteblack):-
-    write('g').
+    put_code(0x25D2).
 write_hexagon_tile(blackwhite):-
-    write('G').
+    put_code(0x25D3).
 write_hexagon_tile(whitewhite):-
-    write('W').
+    put_code(0x25FB).
 write_hexagon_tile(blackblack):-
-    write('B').
+    put_code(0x25FC).
 
 % print_stats(+GameState)
 % Prints the player which plays the turn.
@@ -73,3 +73,10 @@ print_stats([_,Player]):-
     ),
     format('It\'s Player ~a\'s turn. Good luck!', [Name]),
     true.
+
+
+winner_screen(Gamestate,Winner):-
+    clear,
+    (Winner =:= 1 -> name_of_the_player(player1, Name) ; name_of_the_player(player2, Name)),
+    format('Player ~a won the game!', [Name]), nl,
+    display_game(Gamestate).

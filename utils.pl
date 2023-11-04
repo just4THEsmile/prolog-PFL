@@ -57,7 +57,7 @@ getStartPlayer(StartPlayer):-
     repeat,
     read(StartPlayer),
     between(1,2,StartPlayer),
-    asserta(white(StartPlayer)),
+    asserta(black(StartPlayer)),
     (StartPlayer =:= 1 -> asserta(black(2)); asserta(black(1))),
     clear_input.
 
@@ -82,3 +82,7 @@ sum_list([], 0).
 sum_list([X|Xs], Sum):-
     sum_list(Xs, RestSum),
     Sum is X + RestSum.
+
+
+parseInput([RowChar|ColumnChars], RowChar, ColumnCode) :-
+    number_chars(ColumnCode, ColumnChars).
