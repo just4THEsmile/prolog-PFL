@@ -49,7 +49,7 @@ put_piece_input(_,_,_):-
 getCoords([RowCode, ColumnCode|_], Player,Board,Color):-
     (
         (Player = 1 -> name_of_the_player(player1, Name); Player = 2 -> name_of_the_player(player2, Name)),
-        \+ member(Name, ['FitBot', 'FatBot', 'Bot']),
+        \+ member(Name, ['FitBot', 'FatBot', 'Bot']), write(Name),nl,
         read(Input),
         atom_chars(Input, [RowChar, ColumnChar|_]), % Convert input to a list of characters
         char_code(RowChar, RowCode),
@@ -272,12 +272,13 @@ change_player([Board, Player], [Board, NewPlayer]):-
 
 
 game_cycle_second_phase(Gamestate):-
-    check_game_over(Gamestate).
+    display_game(Gamestate), 
+    check_game_over(Gamestate,Winner),
+    write('WINNNNNNER HELL YE:  '),
+    write(Winner).
 
 game_cycle_second_phase(Gamestate):-
-    display_game(Gamestate), 
     print_stats(Gamestate),
-    write('bruhhh '), nl,
     move_piece(Gamestate, NewGamestate),
     change_player(NewGamestate, NewGamestate2),
     game_cycle_second_phase(NewGamestate2).
@@ -288,34 +289,39 @@ game_cycle_second_phase(Gamestate):-
 
 %------------------------------------functions to check if victory conditions are met ----------------------------------------------------------------------------
 
-check_game_over(Gamestate):-
-    check_if_white_wins(Gamestate).
+check_game_over(Gamestate,Winner):-
+    check_if_white_wins(Gamestate,Winner).
 
-check_game_over(Gamestate):-
-    check_if_black_wins(Gamestate).    
+check_game_over(Gamestate,Winner):-
+    check_if_black_wins(Gamestate,Winner).    
 
 check_game_over(_):-
     !,
     fail.
 
-check_if_black_wins([Matrix,_]):-
-    write('black wins:'),nl,
+check_if_black_wins([Matrix,Player],Winner):-
+    %write('black wins:'),nl,
     length(Matrix,Num_rows),
     Side_size is ((Num_rows+1)//2),
     find_Values(blackblack, blackwhite, Matrix,Indices),
-    check_3in_line(Indices, black, Side_size).
+    %write(Indices),nl,
+    check_3in_line(Indices, black, Side_size),
+    Winner is Player,
+    write(Indices),nl.
 
 
 
 
 
-check_if_white_wins([Matrix,_]):-
-    write('white wins:'),nl,
+check_if_white_wins([Matrix,Player],Winner):-
+    %write('white wins:'),nl,
     length(Matrix,Num_rows),
     Side_size is ((Num_rows+1)//2),
     find_Values(whiteblack, whitewhite, Matrix,Indices),
-    write(Indices),nl,
-    check_3in_line(Indices, white, Side_size).
+    %write(Indices),nl,
+    check_3in_line(Indices, white, Side_size),
+    Winner is Player,
+    write(Indices),nl.
 
 % auxilliary fuctions ------------------------------------
 
@@ -363,9 +369,8 @@ check_3in_line([],_,_):-
 !,
 fail.
 
-check_3in_line([Row-Col|Tail],Player,Side_size):-
-    one_in_line_aux(Row-Col, Tail, Side_size),
-        format('Congrats ~a won pretty easily!!!!!!!!!!!!!', [Player]),!, nl.
+check_3in_line([Row-Col|Tail],_,Side_size):-
+    one_in_line_aux(Row-Col, Tail, Side_size),!.
 
 check_3in_line([_|Tail],Player,Side_size):-
     check_3in_line(Tail, Player, Side_size).
@@ -373,13 +378,12 @@ check_3in_line([_|Tail],Player,Side_size):-
 
 %for horizontal lines
 one_in_line_aux(Row-Col,List,_):-
-    write('horizontal1'),nl,
+
     Col2 is Col+1,
     member(Row-Col2,List),
-    write('horizontal2'),nl,
+
     Col3 is Col2+1,
-    member(Row-Col3,List),
-    write('horizontal3'),nl.
+    member(Row-Col3,List).
 
 %for horizontal lines
 one_in_line_aux(Row-Col,List,_):-
@@ -490,6 +494,7 @@ move_piece([Board,Player],[NewBoard,Player]):-
     ; Player = 2 ->
         name_of_the_player(player2, Name)
     ),
+    \+ member(Name, ['FitBot', 'FatBot', 'Bot']),
     format('Player: ~a choose the piece you want to move', [Name]),nl,
     getCoords([Row, Col], Player, Board, _),
     RealRow is Row-97+1,
@@ -504,6 +509,26 @@ move_piece([Board,Player],[NewBoard,Player]):-
     CheckRange =:= Range,nl,
     check_if_destination_is_clear_or_has_one_level(RealRow2-Col2,Board),
     move_aux(RealRow-Col,RealRow2-Col2,Board,NewBoard, Player).
+
+move_piece([Board,Player],[NewBoard,Player]):-
+    (Player = 1 ->
+        name_of_the_player(player1, Name)
+    ; Player = 2 ->
+        name_of_the_player(player2, Name)
+    ),
+    member(Name, ['FitBot', 'FatBot', 'Bot']),write(Name),nl,
+    (Player = 1 ->
+        bot_difficulty(player1, Difficulty)
+    ; Player = 2 ->
+        bot_difficulty(player2, Difficulty)
+    ),
+    (
+        Difficulty = 1 -> get_random_move_second_cycle([R-C,R1-C1], [Board, Player]);
+        Difficulty = 2 -> get_Hard_Move_second_cycle([R-C,R1-C1], [Board, Player])
+    ),
+    write('Bot chose: '), write([R-C,R1-C1]), nl,
+    move_aux(R-C,R1-C1,Board,NewBoard, Player).
+
 
   
 move_piece([Board,Player],[NewBoard,Player]):-
@@ -601,7 +626,7 @@ get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
 
 get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
     Row =:= Side_size,(Row =:= (Row2 - 1) ; Row =:= (Row2 + 1)), 
-    (Col=:=Col2; Col=:=Col2-1),
+    (Col=:=Col2; Col=:=Col2+1),
     Range is 1.    
 %----range-2------------------------------------------------------------------------------------------------------------------------------------------------------
 get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
@@ -639,3 +664,204 @@ get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
     (Col=:=Col2 ; Col=:=Col2 + 2),
     Range is 2.        
     
+
+%-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+%random  bot
+inBoard_int(Row-Col,Board):-
+    length(Board,Size),
+    valid_row_int(Row, Size),
+    valid_column_int(Col, Row, Size).    
+
+valid_row_int(Row, Size) :-
+    Row > 0, %  'a'
+    Row < Size. 
+
+% valid_column(Column, Row, Size)
+% Checks if a column is valid
+valid_column_int(Column, Row, Size) :-
+    integer(Column),
+    Column >= 1,
+    Column =< Size,
+    valid_max_column_int(Row, Size, MaxColumn),
+    Column =< MaxColumn,
+    !.
+
+% valid_max_column(Row, Size, MaxColumn)
+% Checks if a column is valid and according to the hexagonal board design
+valid_max_column_int(Row, Size, MaxColumn):-
+    SizeHalf is ((Size // 2)+1),
+    (Row < SizeHalf ->
+        MaxColumn is abs(Row + SizeHalf - 1)
+    ;
+        MaxColumn is abs( Size - Row + SizeHalf )
+    ).    
+
+
+
+
+
+
+get_random_move_second_cycle([R-C,R1-C1], [Board, Player]):-
+    valid_moves_second_cycle(Board,Player, ListOfMoves),
+    random_member([R-C,R1-C1],ListOfMoves).
+
+
+        
+
+valid_moves_second_cycle(Board, Player,ListOfMoves):-
+    white(Player),
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),  
+    findall([R-C,R1-C1], (
+        between(1,Size,C),
+        between(1, Size, R),
+        inBoard_int(R-C,Board),
+        between(1,Size,C1),
+        between(1,Size,R1),
+        inBoard_int(R1-C1,Board),
+        find_Values(whiteblack, whitewhite, Board, Indices),
+        find_Values(white, white, Board, Indices2),
+        append(Indices,Indices2,Indices3),
+        member(R-C,Indices3),
+        check_if_piece_is_from_player(R-C,Player,Board,Range),
+        get_distance_in_line(R-C,R1-C1,Side_Size,Range1),
+        Range1 =:= Range,
+        check_if_destination_is_clear_or_has_one_level(R1-C1,Board)
+    ), ListOfMoves).   
+
+valid_moves_second_cycle(Board, Player,ListOfMoves):-
+    black(Player),
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),  
+    findall([R-C,R1-C1], (
+        between(1,Size,C),
+        between(1, Size, R),
+        inBoard_int(R-C,Board),
+        between(1,Size,C1),
+        between(1,Size,R1),
+        inBoard_int(R1-C1,Board),
+        find_Values(blackblack, blackwhite, Board, Indices),
+        find_Values(black, black, Board, Indices2),
+        append(Indices,Indices2,Indices3),
+        member(R-C,Indices3),
+        check_if_piece_is_from_player(R-C,Player,Board,Range),
+        get_distance_in_line(R-C,R1-C1,Side_Size,Range1),
+        Range1 =:= Range,
+        check_if_destination_is_clear_or_has_one_level(R1-C1,Board)
+    ), ListOfMoves).     
+
+    calculate_distances_Score(R-C,R1-C1, OwnPieces, Scores,Player,Board):-
+    findall([Score,[OwnRow-OwnColumn]], (
+        member(OwnRow-OwnColumn, OwnPieces),
+        hexagonal_distance(OwnRow-OwnColumn, R1-C1, Distance),
+        get_Move_score(R-C,R1-C1,Distance,Board,Score,Player)
+
+    ), Scores).
+
+
+% Define a predicate to calculate the hexagonal distance between two positions
+hexagonal_distance(X1-Y1, X2-Y2, Distance) :-
+    % Calculate the absolute differences in X and Y coordinates
+    DX is abs(X2 - X1),
+    DY is abs(Y2 - Y1),
+    % Calculate the horizontal distance, taking into account the "staggered" rows
+    HDistance is DX,
+    % Calculate the vertical distance, taking into account the "staggered" rows
+    VDistance is DY + (DX // 2),
+    % The maximum distance is the maximum of horizontal and vertical distances
+    Distance is max(HDistance, VDistance).
+
+get_Hard_Move_second_cycle(Move,[Board,Player]):-
+    write('Hello'),nl,
+    hard_moves_second_part(Board,Player,ListOfMoves),
+    write(ListOfMoves),nl,
+    sort(ListOfMoves,ListOfMoves2),
+    nth1(1,ListOfMoves2,[_,Move]),
+    write(Move),nl,nl,nl,nl,nl.
+
+
+hard_moves_second_part(Board, Player,ListOfMoves):-
+    white(Player),
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),  
+    findall([Score,[R-C,R1-C1]], (
+        between(1,Size,C),
+        between(1, Size, R),
+        inBoard_int(R-C,Board),
+        between(1,Size,C1),
+        between(1,Size,R1),
+        inBoard_int(R1-C1,Board),
+        find_Values(whiteblack, whitewhite, Board, Indices),
+        find_Values(white, white, Board, Indices2),
+        append(Indices,Indices2,Indices3),
+        member(R-C,Indices3),
+        check_if_piece_is_from_player(R-C,Player,Board,Range),
+        get_distance_in_line(R-C,R1-C1,Side_Size,Range1),
+        Range1 =:= Range,
+        check_if_destination_is_clear_or_has_one_level(R1-C1,Board),
+        calculate_distances_Score(R-C,R1-C1, Indices3, Scores,Player,Board),
+        sort(Scores,Scores2),
+        nth1(1,Scores2,[Score,[_-_]])
+
+
+    ), ListOfMoves).  
+
+hard_moves_second_part(Board, Player,ListOfMoves):-
+    black(Player),
+    length(Board, Size),
+    Side_Size is ((Size+1)//2),  
+    findall([Score,[R-C,R1-C1]], (
+        between(1,Size,C),
+        between(1, Size, R),
+        inBoard_int(R-C,Board),
+        between(1,Size,C1),
+        between(1,Size,R1),
+        inBoard_int(R1-C1,Board),
+        find_Values(blackblack, blackwhite, Board, Indices),
+        find_Values(black, black, Board, Indices2),
+        append(Indices,Indices2,Indices3),
+        member(R-C,Indices3),
+        check_if_piece_is_from_player(R-C,Player,Board,Range),
+        get_distance_in_line(R-C,R1-C1,Side_Size,Range1),
+        Range1 =:= Range,
+        check_if_destination_is_clear_or_has_one_level(R1-C1,Board),
+        calculate_distances_Score(R-C,R1-C1, Indices3, Scores,Player,Board),
+        sort(Scores,Scores2),
+        nth1(1,Scores2,[Score,[_-_]])
+
+
+    ), ListOfMoves).     
+
+
+
+get_Move_score(R-C,R1-C1,_,Board,Score,Player):-
+    move_aux(R-C,R1-C1,Board,NewBoard, Player),
+    check_game_over([NewBoard,Player],_),
+    write([R-C,R1-C1]),nl,
+    Score is -99,!.
+
+get_Move_score(R-C,_-_,Distance,Board,Score,_):-
+
+    \+check_if_destination_is_clear_or_has_one_level(R-C,Board),
+    Score is Distance+4,!.
+
+
+
+get_Move_score(_-_,R1-C1,Distance,Board,Score,Player):-
+
+    check_if_piece_is_from_player(R1-C1,Player,Board,_),
+    Score is Distance -1,!.
+
+
+
+get_Move_score(_-_,R1-C1,Distance,Board,Score,Player):-
+
+    change_player([_,Player],[_,NextPlayer]),
+    check_if_piece_is_from_player(R1-C1,NextPlayer,Board,_),
+    Score is Distance - 6,!.
+
+
+
+ get_Move_score(_-_,_-_,Distance,_,Score,_):-
+    Score is Distance+1,!.       
+     

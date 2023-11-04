@@ -24,4 +24,4 @@ play:-
 % initialize_player_pieces
 % The initialize_player_pieces/0 initialize the number of pieces of each color
 initialize_player_pieces:-
-    asserta(disks(6,6)).
+    asserta(disks(11,11)).
