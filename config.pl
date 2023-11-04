@@ -30,7 +30,7 @@ drawStartMenu:-
 drawBotDifficultyMenu(BotName):-
     clear,
     write('=====================================================================================\n'),
-    format('|Select the difficulty of the ~a:                                                  |\n',[BotName]),
+    format('|Select the difficulty of the ~a:                                               |\n',[BotName]),
     write('|     1. Easy                                                                       |\n'),
     write('|     2. Hard                                                                       |\n'),
     write('=====================================================================================\n'),

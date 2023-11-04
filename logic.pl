@@ -1,5 +1,6 @@
 :-consult(data).
 :-consult(display).
+:-consult(utils).
 :- use_module(library(lists)).
 
 /*game_cycle_first_phase(Gamestate):-
@@ -28,6 +29,8 @@ game_cycle_first_phase(Gamestate,NewGamestate4):-
 put_piece_input([Board,Player], [Row, Column], Color) :-
     disks(WhitePieces, BlackPieces),
     (Color = white, WhitePieces > 0; Color = black, BlackPieces > 0),
+    (white(Player) -> ColorPlayer = white; black(Player) -> ColorPlayer = black),
+    format('\nYour PlayerColor is ~a!\n', [ColorPlayer]),
     repeat,
     format('Choose a position to put a ~a piece: ', [Color]),
     getCoords([RowCode,Column|_],Player,Board,Color),
@@ -46,22 +49,21 @@ put_piece_input(_,_,_):-
 
 % getCoords([RowCode, ColumnCode|_], Player,Board,Color)
 % Asks the user or a bot for a position to put a piece
-getCoords([RowCode, ColumnCode|_], Player,Board,Color):-
+getCoords([RowCode, ColumnCode|_], Player, Board, Color):-
     (
         (Player = 1 -> name_of_the_player(player1, Name); Player = 2 -> name_of_the_player(player2, Name)),
-        \+ member(Name, ['FitBot', 'FatBot', 'Bot']), write(Name),nl,
+        \+ member(Name, ['FitBot', 'FatBot', 'Bot']), write(' '),
         read(Input),
-        atom_chars(Input, [RowChar, ColumnChar|_]), % Convert input to a list of characters
-        char_code(RowChar, RowCode),
-        char_code(ColumnChar, ColumnCodeUnrefined),
-        ColumnCode is ColumnCodeUnrefined - 48 %  column value   
+        atom_chars(Input, InputChars), 
+        parseInput(InputChars, RowChar, ColumnCode), % Parse input into row and column components
+        char_code(RowChar, RowCode)
     );
     (
         (Player = 1 -> name_of_the_player(player1, Name), bot_difficulty(player1, Difficulty); 
         Player = 2 -> name_of_the_player(player2, Name), bot_difficulty(player2, Difficulty)),
         (
-            Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_],Board);
-            Difficulty = 2 -> getCoordsHard([RowCode,ColumnCode],[Board,Player],Color)
+            Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_], Board);
+            Difficulty = 2 -> getCoordsHard([RowCode, ColumnCode], [Board, Player], Color)
         )
     ).
 
@@ -189,8 +191,14 @@ valid_put_piece([Row, Column], Size):-
 % valid_row(Row, Size)
 % Checks if a row is valid
 valid_row(Row, Size) :-
-    Row >= 97, %  'a'
-    Row < 97 + Size. 
+    Row >= 97, % ASCII code for 'a'
+    Row < 97 + Size,
+    !. % Cut to prevent backtracking if the row is valid
+
+valid_row(Row, _) :-
+    char_code(RowChar,Row),
+    format('Invalid row: ~w~n', [RowChar]),
+    fail.
 
 % valid_column(Column, Row, Size)
 % Checks if a column is valid
@@ -201,6 +209,10 @@ valid_column(Column, Row, Size) :-
     valid_max_column(Row, Size, MaxColumn),
     Column =< MaxColumn,
     !.
+
+valid_column(Column, _, _) :-
+    format('Invalid column: ~w~n', [Column]),
+    fail.
 
 % valid_max_column(Row, Size, MaxColumn)
 % Checks if a column is valid and according to the hexagonal board design
@@ -274,8 +286,7 @@ change_player([Board, Player], [Board, NewPlayer]):-
 game_cycle_second_phase(Gamestate):-
     display_game(Gamestate), 
     check_game_over(Gamestate,Winner),
-    write('WINNNNNNER HELL YE:  '),
-    write(Winner).
+    winner_screen(Gamestate,Winner).
 
 game_cycle_second_phase(Gamestate):-
     print_stats(Gamestate),
