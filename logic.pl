@@ -63,7 +63,7 @@ getCoords([RowCode, ColumnCode|_], Player, Board, Color):-
         (
             Difficulty = 1 -> getCoordsRandom([RowCode, ColumnCode|_], Board);
             Difficulty = 2 -> getCoordsHard([RowCode, ColumnCode], [Board, Player], Color)
-        )
+        ),write(' '),nl,nl
     ).
 
 % getCoordsRandom(-[Row, Column],+Board)
@@ -99,7 +99,6 @@ getCoordsHard([Row, Column], [Board, Player], Color):-
             choose_random_move_other( Board, [Row, Column]),
             format('Best Move: ~w\n', [[Row, Column]])
         ;
-            write('Own Pieces: '), write(OpponentPieces), nl,
             valid_moves(Board, EmptyPositions),
             findall([DistanceNeg, [Row, Column]], (
                 member([Row, Column], EmptyPositions),
@@ -152,8 +151,7 @@ evaluate_proximity(EmptyPositions, OwnPieces, BestMove):-
         calculate_distances([Row, Column], OwnPieces, Distances),
         sum_list(Distances, SumDistances)
     ), Moves),
-    sort(Moves, SortedMoves),
-    write('Sorted Moves: '), write(SortedMoves), nl,
+    sort(Moves, SortedMoves), nl,
     nth1(_, SortedMoves, BestMove).
 
 % valid_moves(+Board, -ListOfMoves)
@@ -194,7 +192,7 @@ valid_row(Row, Size) :-
     Row < 97 + Size,
     !. % Cut to prevent backtracking if the row is valid
 
-valid_row(Row, _) :-
+valid_row(_ , _) :-
     %char_code(RowChar,Row),
     %format('Invalid row: ~w~n', [RowChar]),
     fail.
@@ -209,7 +207,7 @@ valid_column(Column, Row, Size) :-
     Column =< MaxColumn,
     !.
 
-valid_column(Column, _, _) :-
+valid_column(_, _, _) :-
     %format('Invalid column: ~w~n', [Column]),
     fail.
 
@@ -282,11 +280,17 @@ change_player([Board, Player], [Board, NewPlayer]):-
     (Player = 1 -> NewPlayer = 2; Player = 2 -> NewPlayer = 1).
 
 
+% game_cycle_second_phase(+Gamestate)
+% Cycles through the second phase of the game, where the players take turns moving the pieces until someone wins the game.
+% this part prints the board and checks if the game is over printing winner screen if victorious
 game_cycle_second_phase(Gamestate):-
     display_game(Gamestate), 
     check_game_over(Gamestate,Winner),
     winner_screen(Gamestate,Winner).
 
+% game_cycle_second_phase(+Gamestate)
+% Cycles through the second phase of the game, where the players take turns moving the pieces until someone wins the game.
+% this part is responsible for moving the pieces
 game_cycle_second_phase(Gamestate):-
     print_stats(Gamestate),
     move_piece(Gamestate, NewGamestate),
@@ -299,6 +303,8 @@ game_cycle_second_phase(Gamestate):-
 
 %------------------------------------functions to check if victory conditions are met ----------------------------------------------------------------------------
 
+% check_game_over(+Gamestate,-Winner)
+% checks if the game is over and returns the winner player number
 check_game_over(Gamestate,Winner):-
     check_if_white_wins(Gamestate,Winner).
 
@@ -309,6 +315,8 @@ check_game_over(_):-
     !,
     fail.
 
+%check_if_black_wins([+Matrix,+Player],-Winner)
+% checks if black won the game return yes and Winner player number else fail
 check_if_black_wins([Matrix,Player],Winner):-
     %write('black wins:'),nl,
     length(Matrix,Num_rows),
@@ -316,13 +324,11 @@ check_if_black_wins([Matrix,Player],Winner):-
     find_Values(blackblack, blackwhite, Matrix,Indices),
     %write(Indices),nl,
     check_3in_line(Indices, black, Side_size),
-    Winner is Player,
-    write(Indices),nl.
+    Winner is Player.
 
 
-
-
-
+%check_if_white_wins([+Matrix,+Player],-Winner)
+% checks if white won the game return yes and Winner player number else fail
 check_if_white_wins([Matrix,Player],Winner):-
     %write('white wins:'),nl,
     length(Matrix,Num_rows),
@@ -334,8 +340,8 @@ check_if_white_wins([Matrix,Player],Winner):-
     write(Indices),nl.
 
 % auxilliary fuctions ------------------------------------
-
-% Define a predicate to find the indices of two values in a matrix and return them as a list
+% find_Values( +Value1, +Value2,+Matrix, -Indices)
+% finds all the indices of the matrix that have the value1 or value2 and returns them in a list of the form [Row-Column,Row-Column,...]
 find_Values( Value1, Value2,Matrix, Indices) :-
     find_indices(Matrix, 1, Value1, Value2, [], Indices),!.
 
@@ -355,6 +361,7 @@ find_indices_in_row([], _, _, _, _, Indices, Indices).
 % Iterate through each column in a row
 find_indices_in_row([Element|Rest], RowIndex, ColIndex, Value1, Value2, Acc, Indices) :-
     Element = Value2,
+    % If the current element matches the second desired value, add its indices to the list
     append(Acc, [RowIndex-ColIndex], NewAcc),
     NextColIndex is ColIndex + 1,
     find_indices_in_row(Rest, RowIndex, NextColIndex, Value1, Value2, NewAcc, Indices).
@@ -375,6 +382,9 @@ find_indices_in_row([_|Rest], RowIndex, ColIndex, Value1, Value2, Acc, Indices) 
 
 % end of auxilliary fuctions ----------------------------------------------  
 
+% check_3in_line(+Indices,+Player,+Side_size)
+% checks if there are 3 stacked pieces in line and returns true if there are and false if there are not
+% due to the hexagonal board design there are 3 types of lines: horizontal, diagonal from top left to bottom right and diagonal from top right to bottom left
 check_3in_line([],_,_):- 
 !,
 fail.
@@ -462,11 +472,16 @@ one_in_line_aux(Row-Col,List,Side_size):-
     member(Row3-Col,List).
 
 %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+%inBoard((+Row)-(+Col),+Board)
+% checks if the position is in the board receiving the row in char value like a,b,c... and the column in int value
 inBoard(Row-Col,Board):-
     length(Board,Size),
     valid_row(Row, Size),
     valid_column(Col, Row, Size).
 
+% check_if_piece_is_from_player((+Row)-(+Col),+Player,+Board,-Range)
+% fails if piece is not from player and returns the range of the piece if it is
+% The piece can move 1 or 2 positions if its not stacked or stacked
 check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
     white(Player),
     find_Values(whiteblack, whitewhite, Board, Indices),
@@ -491,13 +506,16 @@ check_if_piece_is_from_player(Row-Col,Player,Board,Range):-
     member(Row-Col,Indices),
     Range is 1.   
 
+% check_if_destination_is_clear_or_has_one_level((+Row)-(+Col),+Board)
+% checks if the destination is clear or has one level
 check_if_destination_is_clear_or_has_one_level(Row-Col,Board):-
     find_Values(whiteblack, whitewhite, Board, Indices),
     \+ member(Row-Col,Indices),
     find_Values(blackblack, blackwhite, Board, Indices2),
     \+ member(Row-Col,Indices2).
 
-
+% move_piece([+Board,+Player],[-NewBoard,-Player])
+% its responsible for the movement of the pieces either from bots or humans and sanitization of inputs 
 move_piece([Board,Player],[NewBoard,Player]):-
     (Player = 1 ->
         name_of_the_player(player1, Name)
@@ -540,14 +558,13 @@ move_piece([Board,Player],[NewBoard,Player]):-
     move_aux(R-C,R1-C1,Board,NewBoard, Player).
 
 
-  
 move_piece([Board,Player],[NewBoard,Player]):-
     write('Move not valid. Try again.'), nl,
     move_piece([Board,Player],[NewBoard,Player]).     
 
   
-
-
+% move_aux((+Row)-(+Col),(+Row2)-(+Col2),+Board,-NewNewBoard, +Player)
+% moves the top piece from Row-Col to Row2-Col2 and returns the new board
 move_aux(Row-Col,Row2-Col2,Board,NewNewBoard, Player):-
     white(Player),
     remove_top_piece(Row-Col, Board,NewBoard, Player),
@@ -557,7 +574,9 @@ move_aux(Row-Col,Row2-Col2,Board,NewNewBoard, Player):-
     black(Player),
     remove_top_piece(Row-Col, Board,NewBoard, Player),
     add_top_piece(Row2-Col2, black, NewBoard , NewNewBoard,Player).      
-    
+
+% remove_top_piece((+Row)-(+Col) ,+Board, -NewBoard, +Player)
+% removes the top piece from Row-Col and returns the new board
 remove_top_piece(Row-Col ,Board, NewBoard, Player):-
     nth1(Row, Board, BoardRow),
     nth1(Col, BoardRow, PieceColor),
@@ -576,7 +595,8 @@ remove_top_piece(Row-Col ,Board, NewBoard, Player):-
     AddaptedRow is Row + 97 - 1,
     put_piece_move([Board, Player], [AddaptedRow, Col], [NewBoard, Player], NewColor).  
 
-
+% add_top_piece((+Row)-(+Col) ,+Color, +Board, -NewBoard, +Player)
+% adds a piece of Color on top to Row-Col and returns the new board
 add_top_piece(Row-Col, Color, Board,NewBoard, Player):-
     nth1(Row, Board, BoardRow),
     nth1(Col, BoardRow, PieceColor),
@@ -607,8 +627,9 @@ add_top_piece(Row-Col, Color, Board,NewBoard, Player):-
     AddaptedRow is Row + 97 - 1,
     put_piece_move([Board, Player], [AddaptedRow, Col], [NewBoard, Player], NewColor).     
 
-%    get_distance_in_line
-
+% get_distance_in_line((+Row)-(+Col),(+Row2)-(+Col2),+Side_size,-Range)
+% fails if they are not in the same row and are at a distance and at a distance of more than 2 also fails if they are not in the same line ex (top left to bottom right)
+% due to the hexagonal board design this function was hard to implement and has a lot of cases
 %-------------range-1-----------------------------------------------------------------------------------------------------------------------------------------------
 get_distance_in_line(Row-Col,Row2-Col2,_,Range):-
     Row =:= Row2,
@@ -676,18 +697,24 @@ get_distance_in_line(Row-Col,Row2-Col2,Side_size,Range):-
     
 
 %-----------------------------------------------------------------------------------------------------------------------------------------------------------------
-%random  bot
+% random  bot
+
+% inBoard_int((+Row)-(+Col),+Board)
+% checks if the position is in the board receiving the row in int value and the column in int value
+% fails if the position is not in the board
 inBoard_int(Row-Col,Board):-
     length(Board,Size),
     valid_row_int(Row, Size),
     valid_column_int(Col, Row, Size).    
 
+% valid_row_int(+Row, +Size)
+% Checks if a row is valid in int value
 valid_row_int(Row, Size) :-
-    Row > 0, %  'a'
+    Row > 0, 
     Row =< Size. 
 
-% valid_column(Column, Row, Size)
-% Checks if a column is valid
+% valid_column_int(+Column, +Row, +Size)
+% Checks if a column is valid on the row in int value
 valid_column_int(Column, Row, Size) :-
     integer(Column),
     Column >= 1,
@@ -696,8 +723,8 @@ valid_column_int(Column, Row, Size) :-
     Column =< MaxColumn,
     !.
 
-% valid_max_column(Row, Size, MaxColumn)
-% Checks if a column is valid and according to the hexagonal board design
+% valid_max_column_int(Row, Size, MaxColumn)
+% return the max column value for a given row in int value
 valid_max_column_int(Row, Size, MaxColumn):-
     SizeHalf is ((Size // 2)+1),
     (Row < SizeHalf ->
@@ -707,17 +734,16 @@ valid_max_column_int(Row, Size, MaxColumn):-
     ).    
 
 
-
-
-
-
+% get_random_move_second_cycle([(+R)-(+C),(+R1)-(+C1)], [+Board, +Player])
+% gets a random move for the bot in the second cycle of the game
 get_random_move_second_cycle([R-C,R1-C1], [Board, Player]):-
     valid_moves_second_cycle(Board,Player, ListOfMoves),
     random_member([R-C,R1-C1],ListOfMoves).
 
 
         
-
+% valid_moves_second_cycle(+Board, +Player, -ListOfMoves)
+% gets all the valid moves for the player in the second cycle of the game
 valid_moves_second_cycle(Board, Player,ListOfMoves):-
     white(Player),
     length(Board, Size),
@@ -760,6 +786,9 @@ valid_moves_second_cycle(Board, Player,ListOfMoves):-
         check_if_destination_is_clear_or_has_one_level(R1-C1,Board)
     ), ListOfMoves).     
 
+% calculate_distances_Score((+R)-(+C),(+R1)-(+C1), +OwnPieces, -Scores,+Player,+Board)
+% calculates multiple scores of a move for the bot in the second cycle of the game
+% it was needed to calculate multiple  scores of the same move because it has to be aware of the distance between the friendly pieces
 calculate_distances_Score(R-C,R1-C1, OwnPieces, Scores,Player,Board):-
 findall([Score,[OwnRow-OwnColumn]], (
     member(OwnRow-OwnColumn, OwnPieces),
@@ -769,7 +798,8 @@ findall([Score,[OwnRow-OwnColumn]], (
 ), Scores).
 
 
-% Define a predicate to calculate the hexagonal distance between two positions
+% hexagonal_distance((+X1)-(+Y1), (+X2)-(+Y2), -Distance)
+% calculates the distance between two points in the hexagonal board
 hexagonal_distance(X1-Y1, X2-Y2, Distance) :-
     % Calculate the absolute differences in X and Y coordinates
     DX is abs(X2 - X1),
@@ -781,14 +811,16 @@ hexagonal_distance(X1-Y1, X2-Y2, Distance) :-
     % The maximum distance is the maximum of horizontal and vertical distances
     Distance is max(HDistance, VDistance).
 
+% get_Hard_Move_second_cycle( +Move, [+Board, +Player])
+% gets the best move for the hard bot in the second cycle of the game
 get_Hard_Move_second_cycle(Move,[Board,Player]):-
     hard_moves_second_part(Board,Player,ListOfMoves),
-    write(ListOfMoves),nl,
     sort(ListOfMoves,ListOfMoves2),
-    nth1(1,ListOfMoves2,[_,Move]),
-    write(Move),nl,nl,nl,nl,nl.
+    nth1(1,ListOfMoves2,[_,Move]).
 
 
+% hard_moves_second_part(+Board, +Player, -ListOfMoves)
+% gets all the valid moves for the player in the second cycle of the game with score attached to them
 hard_moves_second_part(Board, Player,ListOfMoves):-
     white(Player),
     length(Board, Size),
@@ -842,27 +874,29 @@ hard_moves_second_part(Board, Player,ListOfMoves):-
     ), ListOfMoves).     
 
 
-
+% get_Move_score((+R)-(+C),(+R1)-(+C1),+Distance,+Board,-Score,+Player)
+% calculates the score of a move for the bot in the second cycle of the game
+% this part gives a score of -999 giving priority to winning the game
 get_Move_score(R-C,R1-C1,_,Board,Score,Player):-
     move_aux(R-C,R1-C1,Board,NewBoard, Player),
     check_game_over([NewBoard,Player],_),
-    write([R-C,R1-C1]),nl,
     Score is -999,!.
 
+% this part gives a score Distance+4 - Num*2 because it gives priority to the number of pieces that are closer to the destination and penelizes destacking pieces
 get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
     check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     \+check_if_destination_is_clear_or_has_one_level(R-C,Board),
     Score is Distance+4 - Num*2,!.
 
 
-
+% this part gives a score Distance-1 - Num*2 because it gives priority to the number of pieces that are closer to the destination and gives a little priority  to stack on top of same color pieces
 get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
     check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     check_if_piece_is_from_player(R1-C1,Player,Board,_),
     Score is Distance -1 - Num*2,!.
 
 
-
+% this part gives a score Distance -2 - Num*2 because it gives priority to the number of pieces that are closer to the destination and gives priority to stack a piece on top of an enemy piece
 get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
     check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     change_player([_,Player],[_,NextPlayer]),
@@ -870,14 +904,15 @@ get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
     Score is Distance - 2 - Num*2,!.
 
 
-
+% this part gives a score Distance - Num*2 because it gives priority to the number of pieces that are closer to the destination
 get_Move_score(R-C,R1-C1,Distance,Board,Score,Player):-
     check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num),
     Score is Distance - Num*2,!.      
 
 
 
-
+% check_delta_of_how_many_stacked_pieces_nearby((+R)-(+C),(+R1)-(+C1),+Board,+Player,-Num)
+% checks how many pieces are stacked near the destination and how many are stacked in line withe the previous piece creating a three in line with two pieces stacked and one un stacked
 check_delta_of_how_many_stacked_pieces_nearby(R-C,R1-C1,Board,Player,Num):-
     white(Player),
     length(Board, Size),
